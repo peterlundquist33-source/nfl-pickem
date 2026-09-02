@@ -134,13 +134,13 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
   text-align:center;background:var(--panel);transition:border-color .15s}
 .drop.over{border-color:var(--amber);background:var(--amber-dim)}
 .drop p{margin:.4rem 0 0;color:var(--muted);font-size:.85rem}
-.edit{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+.edit{display:grid;grid-template-columns:84px 1fr 1fr 70px 150px 34px;gap:.4rem;
   align-items:center;padding:.35rem 0}
 .edit input,.edit select{padding:.4rem .5rem;font-size:.85rem}
 .edit .x{background:none;border:1px solid var(--line);border-radius:6px;color:var(--dim);
   padding:.35rem;line-height:1}
 .edit .x:hover{color:var(--loss);border-color:var(--loss)}
-.edithead{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+.edithead{display:grid;grid-template-columns:84px 1fr 1fr 70px 150px 34px;gap:.4rem;
   font-family:var(--cond);font-weight:700;font-size:.7rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--muted);padding-bottom:.3rem;
   border-bottom:1px solid var(--line);margin-top:1rem}
@@ -1076,10 +1076,15 @@ if (typeof window !== "undefined") window.PickemParser = API;
           '<input data-k="away" value="' + esc(g.away) + '" placeholder="Away">' +
           '<input data-k="home" value="' + esc(g.home) + '" placeholder="Home">' +
           '<input data-k="spread" class="num" value="' + esc(g.spread == null ? "" : g.spread) + '" placeholder="\u2014">' +
+          // Name the teams rather than "Away"/"Home" \u2014 checking a parse against
+          // the sheet means reading team names, and the stored value is
+          // unchanged either way.
           '<select data-k="favored">' +
             '<option value=""' + (!g.favored ? " selected" : "") + ">\u2014</option>" +
-            '<option value="away"' + (g.favored === "away" ? " selected" : "") + ">Away</option>" +
-            '<option value="home"' + (g.favored === "home" ? " selected" : "") + ">Home</option>" +
+            '<option value="away"' + (g.favored === "away" ? " selected" : "") + ">" +
+              esc(g.away || "Away") + "</option>" +
+            '<option value="home"' + (g.favored === "home" ? " selected" : "") + ">" +
+              esc(g.home || "Home") + "</option>" +
           "</select>" +
           '<button class="x" data-del="' + i + '" title="Remove">&times;</button></div>';
       });
@@ -1168,6 +1173,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
           var g = state.draft.games[i];
           g.id = (g.away + "-" + g.home).toLowerCase().replace(/[^a-z0-9]+/g, "-")
             .replace(/^-|-$/g, "");
+          render();   // the favored menu names the teams, so relabel it
         }
       });
     });
