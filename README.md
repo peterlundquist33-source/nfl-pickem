@@ -163,12 +163,17 @@ Confirmations are inline rather than `confirm()` dialogs, which a sandboxed fram
 can block outright — a blocked dialog would have made overwriting a week appear
 to do nothing.
 
-**Identity.** Choose your name from a menu, remembered on that device. No
-passwords — the shared passcode gates the site, as specified.
+**Identity is the password.** You type your name — Peter, Dalton or Hunter — and
+that both lets you in and says who you are, then drops you on your picks. One
+field instead of a shared passcode plus a separate "who are you" menu, and picks
+can't be filed under the wrong person by mistake. Matching ignores case and
+whitespace, and `ALIASES` in `src/index.html` catches near-misses ("Daulton").
+"Switch" in the header clears the session and returns to the gate.
 
-**Passcode.** Client-side, so treat it as a "keep strangers out" latch rather
-than security. Real access control is the artifact's own sharing setting: only
-people given the link and signed in to the right organization can open it at all.
+This is a latch, not security: the names are in the page source, as any
+client-side gate must be. It keeps strangers out of a link that gets passed
+around; it is not a login, and it isn't meant to stop the three of you from
+picking as each other if you set your mind to it.
 
 ## Known limits
 

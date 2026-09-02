@@ -108,7 +108,10 @@ input::placeholder{color:var(--dim)}
 .brand span{color:var(--accent)}
 .spacer{margin-left:auto}
 .who{display:flex;align-items:center;gap:.45rem;font-size:.8rem;color:var(--dim)}
-.who select{width:auto;padding:.38rem .55rem;font-size:.82rem;background:var(--slate)}
+.who b{color:var(--text);font-weight:600}
+.lnk{background:none;border:0;padding:0 0 0 .1rem;color:var(--accent);font-size:.78rem;
+  text-decoration:underline;text-underline-offset:2px;transition:color .15s var(--ease)}
+.lnk:hover{color:var(--accent-hi)}
 .tabs{display:flex;max-width:1060px;margin:0 auto;padding:0 1.5rem;gap:1.6rem;
   border-bottom:1px solid var(--hair)}
 .tab{background:none;border:0;padding:.72rem 0;font-weight:500;font-size:.86rem;
@@ -329,9 +332,10 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
 <div id="gate">
   <div class="gate-card">
     <h1>Rizzlers <span>Pick&#39;ems</span></h1>
-    <p class="gate-sub">Pick'em against the spread &middot; Peter, Dalton, Hunter</p>
+    <p class="gate-sub">Pick'em against the spread. Enter your name to get in.</p>
     <div class="gate-row">
-      <input id="pw" type="password" placeholder="Passcode" autocomplete="current-password">
+      <input id="pw" type="text" placeholder="Your name" autocomplete="username"
+             autocapitalize="words" spellcheck="false" aria-label="Your name">
       <button class="btn" id="go">Enter</button>
     </div>
     <p class="err" id="gerr"></p>
@@ -343,9 +347,9 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
     <div class="top-in">
       <div class="brand">Rizzlers <span>Pick&#39;ems</span></div>
       <div class="spacer"></div>
-      <label class="who">You are
-        <select id="meSel" style="width:auto"></select>
-      </label>
+      <div class="who">Signed in as <b id="meName"></b>
+        <button class="lnk" id="switchUser" type="button">Switch</button>
+      </div>
     </div>
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-pane="home" aria-selected="true">Home</button>
@@ -389,13 +393,15 @@ window.FIREBASE_CONFIG = {
   "use strict";
   var P = window.PickemParser;
   var PEOPLE = ["Peter", "Dalton", "Hunter"];
-  var PASSCODE = "rizzlers";
   var COMMISSIONER = "Brian";
+  // Your name is the password: one field that both lets you in and says who you
+  // are, so picks can never be filed under the wrong person by mistake.
+  var ALIASES = { daulton: "Dalton", pete: "Peter", hunt: "Hunter" };
   var SEASON = 2026;
 
   var db = null;                 // shared store, once it resolves
   var state = {
-    me: localStorage.getItem("c3.me") || "",
+    me: "",
     week: null,
     weeks: {},                   // week -> {games, byes}
     picks: {},                   // week -> {person -> {gameId: side}}
@@ -409,21 +415,45 @@ window.FIREBASE_CONFIG = {
 
   /* ------------------------------------------------ gate */
   var gate = document.getElementById("gate");
-  function unlock() {
-    gate.remove();
+
+  function whoIs(input) {
+    var v = (input || "").trim().toLowerCase();
+    if (!v) return null;
+    if (ALIASES[v]) return ALIASES[v];
+    for (var i = 0; i < PEOPLE.length; i++) {
+      if (PEOPLE[i].toLowerCase() === v) return PEOPLE[i];
+    }
+    return null;
+  }
+
+  function unlock(who) {
+    state.me = who;
+    sessionStorage.setItem("c3.who", who);
+    localStorage.setItem("c3.me", who);
+    if (gate && gate.parentNode) gate.remove();
     document.getElementById("app").hidden = false;
     start();
+    selectTab("picks");   // straight to your picks, which is why you're here
   }
-  document.getElementById("go").addEventListener("click", tryPw);
-  document.getElementById("pw").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") tryPw();
-  });
+
   function tryPw() {
-    var v = document.getElementById("pw").value.trim().toLowerCase();
-    if (v === PASSCODE) { sessionStorage.setItem("c3.ok", "1"); unlock(); }
-    else document.getElementById("gerr").textContent = "Not it.";
+    var who = whoIs(document.getElementById("pw").value);
+    if (who) unlock(who);
+    else document.getElementById("gerr").textContent =
+      "That's not one of us. Try Peter, Dalton or Hunter.";
   }
-  if (sessionStorage.getItem("c3.ok") === "1") unlock();
+
+  if (gate) {
+    document.getElementById("go").addEventListener("click", tryPw);
+    document.getElementById("pw").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") tryPw();
+    });
+    document.getElementById("pw").addEventListener("input", function () {
+      document.getElementById("gerr").textContent = "";
+    });
+  }
+  var resumed = whoIs(sessionStorage.getItem("c3.who"));
+  if (resumed) unlock(resumed);
 
   /* ------------------------------------------------ storage */
   // Every write is scoped to one document so three people writing at once
@@ -574,14 +604,12 @@ window.FIREBASE_CONFIG = {
 
   /* ------------------------------------------------ chrome */
   function buildChrome() {
-    var ms = document.getElementById("meSel");
-    ms.innerHTML = '<option value="">choose\u2026</option>' +
-      PEOPLE.map(function (p) { return '<option value="' + p + '">' + p + "</option>"; }).join("");
-    ms.value = state.me;
+    document.getElementById("meName").textContent = state.me || "";
   }
 
-  document.getElementById("meSel").addEventListener("change", function (e) {
-    state.me = e.target.value; localStorage.setItem("c3.me", state.me); render();
+  document.getElementById("switchUser").addEventListener("click", function () {
+    sessionStorage.removeItem("c3.who");
+    location.reload();
   });
   var PANES = ["home", "picks", "scores", "standings", "lines"];
 
@@ -787,7 +815,7 @@ window.FIREBASE_CONFIG = {
     }
     if (!state.me) {
       el.innerHTML = strip + empty("Who are you?",
-        "Pick your name up top so your picks are saved as yours.");
+        "Sign in with your name to make picks.");
       wireWeekStrip(el);
       return;
     }
