@@ -59,10 +59,12 @@ confirms it.
 
 ## The Home tab
 
-Opens on the most recently uploaded week and acts as the hub. Per game it shows
-all three picks side by side, the group's majority underneath, and — once results
-are in — a check or cross against each person plus the group. Above that sit this
-week's records, and shortcuts into Picks, Scores and Standings.
+Opens on the most recently uploaded week and acts as the hub. One row per game,
+two sides: each carries its spread and the initials of whoever took it. An amber
+outline is the group's majority, green is the side that covered, and the box on
+the right reads the group's result — check, cross, `=` for a push, or `n/3` while
+picks are still coming in. A full slate fits on one screen. Above it sit this
+week's records and shortcuts into Picks, Scores and Standings.
 
 "Most recent" means most recently *uploaded* (by `savedAt`), not the highest
 number, so uploading a catch-up week lands you on it. Choosing a week yourself
