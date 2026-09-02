@@ -1,0 +1,1021 @@
+<title>Cover Three</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* An odds-board look: warm amber figures on near-black, the way a sportsbook
+   wall reads. Deliberately single-theme — every color is painted explicitly so
+   the page holds on either host ground. */
+:root{
+  --ink:#0e1116; --panel:#161a21; --panel-2:#1d222b; --line:#2a313c;
+  --text:#eef1f5; --muted:#98a2b0; --dim:#6b7482;
+  --amber:#ffb020; --amber-dim:#3a2c12;
+  --win:#3ecf8e; --loss:#f2555f; --push:#8b95a3;
+  --radius:10px;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --cond:"Barlow Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--ink);color:var(--text);font-family:var(--sans);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-family:var(--cond);font-weight:700;letter-spacing:.01em;
+  text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1000px;margin:0 auto;padding:0 1.1rem 4rem}
+
+/* ---------- gate ---------- */
+#gate{position:fixed;inset:0;z-index:100;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;padding:1.2rem}
+.gate-card{width:100%;max-width:360px;text-align:center}
+.gate-card h1{font-size:2.6rem;line-height:1;letter-spacing:.04em;
+  text-transform:uppercase}
+.gate-card h1 span{color:var(--amber)}
+.gate-sub{color:var(--muted);font-size:.86rem;margin:.5rem 0 1.6rem}
+.gate-row{display:flex;gap:.5rem}
+input,select{font:inherit;background:var(--panel-2);color:var(--text);
+  border:1px solid var(--line);border-radius:8px;padding:.6rem .75rem;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--amber);
+  outline-offset:2px}
+.btn{background:var(--amber);color:#1a1206;border:0;border-radius:8px;
+  padding:.6rem 1rem;font-family:var(--cond);font-weight:700;font-size:1rem;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--amber);color:var(--amber)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.err{color:var(--loss);font-size:.82rem;margin-top:.7rem;min-height:1.2em}
+
+/* ---------- chrome ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(14,17,22,.94);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1000px;margin:0 auto;padding:.7rem 1.1rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.brand{font-family:var(--cond);font-weight:700;font-size:1.1rem;
+  letter-spacing:.12em;text-transform:uppercase}
+.brand span{color:var(--amber)}
+.spacer{margin-left:auto}
+.who{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:var(--muted)}
+.who b{color:var(--text)}
+.tabs{display:flex;gap:.3rem;border-bottom:1px solid var(--line);
+  max-width:1000px;margin:0 auto;padding:0 1.1rem}
+.tab{background:none;border:0;padding:.7rem .1rem;margin-right:1.3rem;
+  font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);border-bottom:2px solid transparent;
+  margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--amber);border-bottom-color:var(--amber)}
+.tab:hover{color:var(--text)}
+
+.head{padding:1.5rem 0 1.1rem;display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap}
+.head h2{font-size:1.7rem;text-transform:uppercase;letter-spacing:.03em}
+.head p{margin:.2rem 0 0;color:var(--muted);font-size:.85rem}
+
+/* ---------- game rows ---------- */
+.games{display:flex;flex-direction:column;gap:.4rem}
+.daymark{font-family:var(--cond);font-weight:700;font-size:.78rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin:1rem 0 .1rem}
+.game{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.7rem .85rem;display:grid;grid-template-columns:1fr auto;gap:.7rem;
+  align-items:center}
+.game.graded-w{border-left:3px solid var(--win)}
+.game.graded-l{border-left:3px solid var(--loss)}
+.game.graded-p{border-left:3px solid var(--push)}
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.side{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+  padding:.5rem .65rem;text-align:left;transition:border-color .12s,background .12s}
+.side:hover{border-color:var(--dim)}
+.side .nm{font-weight:600;font-size:.9rem}
+.side .sp{font-family:var(--mono);font-size:.8rem;color:var(--amber);font-weight:600}
+.side[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-dim)}
+.side.is-ats{box-shadow:inset 0 0 0 1px var(--win)}
+.side:disabled{cursor:default;opacity:.75}
+.meta{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;min-width:104px}
+.note{font-size:.7rem;color:var(--amber);letter-spacing:.04em;text-transform:uppercase;
+  font-family:var(--cond);font-weight:700}
+.votes{display:flex;gap:.22rem}
+.dot{width:20px;height:20px;border-radius:50%;font-size:.62rem;font-weight:700;
+  display:grid;place-items:center;background:var(--panel-2);color:var(--dim);
+  border:1px solid var(--line);font-family:var(--cond)}
+.dot.a{background:var(--amber-dim);border-color:var(--amber);color:var(--amber)}
+.dot.h{background:#12233a;border-color:#2f6fb5;color:#7db4f0}
+.chip{font-family:var(--cond);font-weight:700;font-size:.66rem;letter-spacing:.08em;
+  text-transform:uppercase;padding:.14rem .42rem;border-radius:4px;
+  background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.chip.win{color:var(--win);border-color:var(--win)}
+.chip.loss{color:var(--loss);border-color:var(--loss)}
+.chip.push{color:var(--push);border-color:var(--push)}
+.final{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+
+/* ---------- standings ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.9rem 1rem}
+.card.lead{border-color:var(--amber)}
+.card h3{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.card .rec{font-family:var(--mono);font-size:1.85rem;font-weight:600;margin-top:.3rem;
+  letter-spacing:-.02em}
+.card .pct{font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);
+  margin-top:1rem}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.86rem}
+th,td{padding:.55rem .7rem;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:var(--cond);font-weight:700;font-size:.72rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);background:var(--panel)}
+tbody tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- lines editor ---------- */
+.drop{border:1.5px dashed var(--line);border-radius:var(--radius);padding:1.6rem 1rem;
+  text-align:center;background:var(--panel);transition:border-color .15s}
+.drop.over{border-color:var(--amber);background:var(--amber-dim)}
+.drop p{margin:.4rem 0 0;color:var(--muted);font-size:.85rem}
+.edit{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+  align-items:center;padding:.35rem 0}
+.edit input,.edit select{padding:.4rem .5rem;font-size:.85rem}
+.edit .x{background:none;border:1px solid var(--line);border-radius:6px;color:var(--dim);
+  padding:.35rem;line-height:1}
+.edit .x:hover{color:var(--loss);border-color:var(--loss)}
+.edithead{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+  font-family:var(--cond);font-weight:700;font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);padding-bottom:.3rem;
+  border-bottom:1px solid var(--line);margin-top:1rem}
+.warn{background:#2a1f0c;border:1px solid #6b5013;border-radius:8px;padding:.7rem .9rem;
+  font-size:.83rem;color:#f0cd7f;margin:.9rem 0}
+.warn ul{margin:.4rem 0 0;padding-left:1.1rem}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+.muted{color:var(--muted);font-size:.85rem}
+.empty{text-align:center;padding:3rem 1rem;color:var(--dim)}
+.empty h3{font-size:1.1rem;color:var(--muted);margin-bottom:.3rem}
+.status{font-size:.78rem;color:var(--dim);min-height:1.2em;margin-top:.5rem}
+@media (max-width:620px){
+  .edit,.edithead{grid-template-columns:1fr 1fr;gap:.35rem}
+  .edithead{display:none}
+  .game{grid-template-columns:1fr}
+  .meta{align-items:flex-start;flex-direction:row;flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="gate">
+  <div class="gate-card">
+    <h1>Cover <span>Three</span></h1>
+    <p class="gate-sub">Pick'em against the spread &middot; Peter, Dalton, Hunter</p>
+    <div class="gate-row">
+      <input id="pw" type="password" placeholder="Passcode" autocomplete="current-password">
+      <button class="btn" id="go">Enter</button>
+    </div>
+    <p class="err" id="gerr"></p>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">Cover <span>Three</span></div>
+      <div class="spacer"></div>
+      <label class="who">Week
+        <select id="weekSel" style="width:auto"></select>
+      </label>
+      <label class="who">You are
+        <select id="meSel" style="width:auto"></select>
+      </label>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-pane="picks" aria-selected="true">Picks</button>
+      <button class="tab" role="tab" data-pane="scores" aria-selected="false">Scores</button>
+      <button class="tab" role="tab" data-pane="standings" aria-selected="false">Standings</button>
+      <button class="tab" role="tab" data-pane="lines" aria-selected="false">Lines</button>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="pane-picks"></section>
+    <section id="pane-scores" hidden></section>
+    <section id="pane-standings" hidden></section>
+    <section id="pane-lines" hidden></section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/*
+ * parse-lines.js — turn a weekly spreads PDF into structured games.
+ *
+ * THE WHOLE PROBLEM is that the spread number carries no label. Which team is
+ * favored is encoded ONLY in where the number sits horizontally: it is printed
+ * directly above the favored team's name. Flatten the PDF to plain text and that
+ * information is gone — "LA Rams at Jacksonville" with a "3" over the Rams and a
+ * "3" over Jacksonville produce identical text and opposite meanings.
+ *
+ * So this parser works on positioned words: {str, x, y, w}, where x/y are the
+ * word's left edge and baseline in PDF text space (y increases UPWARD, so a
+ * larger y is higher on the page) and w is its rendered width. Every consumer
+ * has to supply that; pdf.js gives it via getTextContent().
+ *
+ * The layout, per the spec and confirmed against a real sheet:
+ *   Week N
+ *   <weekday>                     <- section header, days vary week to week
+ *   [ box ] [ box ]               <- ~2 game boxes per row
+ *      each box:  (optional note, e.g. "London 8:30 AM")
+ *                 <spread>        <- positioned over the favored side
+ *                 Away  at  Home
+ *   Teams on Bye: A, B
+ *   Name ______                   <- vestigial, ignored
+ *
+ * Everything here is pure and synchronous so it can be unit-tested against a
+ * synthetic word list without a PDF or a browser.
+ */
+
+const DAYS = ["monday", "tuesday", "wednesday", "thursday",
+              "friday", "saturday", "sunday"];
+
+// "5 1/2" -> 5.5, "11 1/2" -> 11.5, "7" -> 7, "3.5" -> 3.5
+const NUM_RE = /^\d{1,2}(\.\d+)?$/;
+const FRAC_RE = /^(\d)\/(\d)$/;
+const PK_RE = /^(pk|pick|pick'?em|even)$/i;
+
+function isNumberish(s) {
+  const t = (s || "").trim();
+  return NUM_RE.test(t) || FRAC_RE.test(t) || PK_RE.test(t);
+}
+
+function tokenValue(s) {
+  const t = (s || "").trim();
+  if (PK_RE.test(t)) return 0;
+  const f = t.match(FRAC_RE);
+  if (f) return Number(f[1]) / Number(f[2]);
+  return Number(t);
+}
+
+/** Words on roughly the same baseline, left to right. */
+function groupRows(words, tol = 3) {
+  const rows = [];
+  for (const w of [...words].sort((a, b) => b.y - a.y || a.x - b.x)) {
+    const row = rows.find((r) => Math.abs(r.y - w.y) <= tol);
+    if (row) row.items.push(w);
+    else rows.push({ y: w.y, items: [w] });
+  }
+  for (const r of rows) r.items.sort((a, b) => a.x - b.x);
+  return rows;
+}
+
+/** Split one row into clusters separated by wide horizontal gaps (= separate boxes). */
+function splitCells(row, gap = 34) {
+  const cells = [];
+  let cur = null;
+  for (const it of row.items) {
+    if (cur && it.x - (cur.x1) <= gap) {
+      cur.items.push(it);
+      cur.x1 = Math.max(cur.x1, it.x + it.w);
+    } else {
+      cur = { items: [it], x0: it.x, x1: it.x + it.w, y: row.y };
+      cells.push(cur);
+    }
+  }
+  for (const c of cells) c.text = c.items.map((i) => i.str).join(" ")
+    .replace(/\s+/g, " ").trim();
+  return cells;
+}
+
+/**
+ * Where does the away team's name end and the home team's begin, in x?
+ * Prefer the actual "at" token; fall back to interpolating within a combined run.
+ */
+function boundaryX(cell) {
+  const at = cell.items.find((i) => /^at$/i.test(i.str.trim()));
+  if (at) return at.x + at.w / 2;
+  for (const it of cell.items) {
+    const idx = it.str.search(/\bat\b/i);
+    if (idx >= 0 && it.str.length) {
+      return it.x + it.w * ((idx + 1) / it.str.length);
+    }
+  }
+  return (cell.x0 + cell.x1) / 2;
+}
+
+/** "LA Rams at Jacksonville" -> {away, home}; null when it isn't a matchup. */
+function splitTeams(text) {
+  const m = text.match(/^(.*?)\s+\bat\b\s+(.*)$/i);
+  if (!m) return null;
+  const away = m[1].replace(/\s+/g, " ").trim();
+  const home = m[2].replace(/\s+/g, " ").trim();
+  if (!away || !home) return null;
+  // guard against prose lines that happen to contain " at "
+  if (away.length > 24 || home.length > 24) return null;
+  if (/\d/.test(away) || /\d/.test(home)) return null;
+  return { away, home };
+}
+
+/**
+ * Main entry. `words` = [{str, x, y, w}], `pageWidth` for the column split.
+ * Returns {week, games, byes, warnings}.
+ */
+function parseWords(words, pageWidth) {
+  const warnings = [];
+  const rows = groupRows(words.filter((w) => (w.str || "").trim()));
+
+  // --- week number ---
+  let week = null;
+  for (const r of rows) {
+    const t = r.items.map((i) => i.str).join(" ").trim();
+    const m = t.match(/\bweek\s+(\d{1,2})\b/i);
+    if (m) { week = Number(m[1]); break; }
+  }
+
+  // --- day section headers, by vertical position ---
+  const dayHeaders = [];
+  for (const r of rows) {
+    for (const c of splitCells(r)) {
+      const t = c.text.replace(/[^A-Za-z]/g, "").toLowerCase();
+      if (DAYS.includes(t)) dayHeaders.push({ day: cap(t), y: r.y });
+    }
+  }
+  dayHeaders.sort((a, b) => b.y - a.y);
+
+  // --- bye teams ---
+  const byes = [];
+  for (const r of rows) {
+    const t = r.items.map((i) => i.str).join(" ");
+    const m = t.match(/teams?\s+on\s+bye\s*:?\s*(.*)$/i);
+    if (m && m[1].trim()) {
+      for (const p of m[1].split(/,|•/)) {
+        const v = p.trim();
+        if (v && !/^name\b/i.test(v)) byes.push(v);
+      }
+    }
+  }
+
+  // --- candidate spread tokens and matchup cells ---
+  const mid = pageWidth / 2;
+  const colOf = (x) => (x < mid ? 0 : 1);
+
+  const spreadCells = [];
+  const gameCells = [];
+  for (const r of rows) {
+    for (const c of splitCells(r)) {
+      if (/teams?\s+on\s+bye/i.test(c.text)) continue;
+      const teams = splitTeams(c.text);
+      if (teams) {
+        gameCells.push({ cell: c, teams, y: r.y, col: colOf((c.x0 + c.x1) / 2) });
+        continue;
+      }
+      // a cell that is only number-ish tokens is a spread
+      const toks = c.items.filter((i) => i.str.trim());
+      if (toks.length && toks.every((i) => isNumberish(i.str))) {
+        const value = toks.reduce((s, i) => s + tokenValue(i.str), 0);
+        spreadCells.push({
+          value,
+          x: toks[0].x + (toks[toks.length - 1].x + toks[toks.length - 1].w - toks[0].x) / 2,
+          y: r.y,
+          col: colOf(toks[0].x),
+          used: false,
+        });
+      }
+    }
+  }
+
+  // --- pair each matchup with the nearest spread ABOVE it in the same column ---
+  const games = [];
+  gameCells.sort((a, b) => b.y - a.y || a.cell.x0 - b.cell.x0);
+  for (const g of gameCells) {
+    const bx = boundaryX(g.cell);
+    const cands = spreadCells
+      .filter((s) => !s.used && s.col === g.col && s.y > g.y && s.y - g.y < 70)
+      .sort((a, b) => (a.y - g.y) - (b.y - g.y));
+    const s = cands[0];
+    let spread = null, favored = null;
+    if (s) {
+      s.used = true;
+      spread = s.value;
+      favored = s.x < bx ? "away" : "home";
+    } else {
+      warnings.push(`No spread found above "${g.teams.away} at ${g.teams.home}"`);
+    }
+    // the nearest header ABOVE the game, not merely the first one
+    const above = dayHeaders.filter((d) => d.y > g.y);
+    const day = above.length ? above[above.length - 1].day : "";
+    games.push({
+      id: slug(`${g.teams.away}-${g.teams.home}`),
+      day,
+      away: g.teams.away,
+      home: g.teams.home,
+      spread,
+      favored,
+      note: "",
+    });
+  }
+
+  if (!games.length) warnings.push("No matchups found — is this the right PDF?");
+  return { week, games, byes, warnings };
+}
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function slug(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+/* ---------------------------------------------------------------- grading */
+
+/**
+ * Against-the-spread result for one game.
+ * margin = (favorite score - underdog score) - spread
+ *   > 0 favorite covered · < 0 underdog covered · 0 push (void)
+ * Returns "away" | "home" | "push" | null (not gradeable yet).
+ */
+function atsWinner(game, score) {
+  if (!score) return null;
+  const { awayScore: a, homeScore: h } = score;
+  if (a == null || h == null || a === "" || h === "") return null;
+  if (game.spread == null || !game.favored) return null;
+  const favIsAway = game.favored === "away";
+  const favScore = favIsAway ? Number(a) : Number(h);
+  const dogScore = favIsAway ? Number(h) : Number(a);
+  if (Number.isNaN(favScore) || Number.isNaN(dogScore)) return null;
+  const margin = (favScore - dogScore) - Number(game.spread);
+  if (margin === 0) return "push";
+  const favWon = margin > 0;
+  if (favIsAway) return favWon ? "away" : "home";
+  return favWon ? "home" : "away";
+}
+
+/** Majority of exactly three picks; null until all three are in. */
+function majority(picksForGame, people) {
+  const votes = people.map((p) => picksForGame[p]).filter(Boolean);
+  if (votes.length < people.length) return null;
+  const tally = {};
+  for (const v of votes) tally[v] = (tally[v] || 0) + 1;
+  let best = null;
+  for (const k of Object.keys(tally)) {
+    if (!best || tally[k] > tally[best]) best = k;
+  }
+  return best;
+}
+
+/** {w,l,p} for a set of side-picks against results. */
+function tally(games, sideFor, resultFor) {
+  const rec = { w: 0, l: 0, p: 0 };
+  for (const g of games) {
+    const side = sideFor(g);
+    const res = resultFor(g);
+    if (!side || !res) continue;
+    if (res === "push") rec.p++;
+    else if (side === res) rec.w++;
+    else rec.l++;
+  }
+  return rec;
+}
+
+const API = {
+  parseWords, atsWinner, majority, tally,
+  // exported for tests
+  _internals: { groupRows, splitCells, splitTeams, boundaryX, isNumberish, tokenValue },
+};
+
+if (typeof window !== "undefined") window.PickemParser = API;
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var P = window.PickemParser;
+  var PEOPLE = ["Peter", "Dalton", "Hunter"];
+  var PASSCODE = "covers";
+  var SEASON = 2026;
+
+  var db = null;                 // shared store, once it resolves
+  var state = {
+    me: localStorage.getItem("c3.me") || "",
+    week: null,
+    weeks: {},                   // week -> {games, byes}
+    picks: {},                   // week -> {person -> {gameId: side}}
+    scores: {},                  // week -> {gameId: {awayScore, homeScore}}
+    draft: null,                 // parsed-but-unsaved lines
+    tab: "picks",
+    status: ""
+  };
+
+  /* ------------------------------------------------ gate */
+  var gate = document.getElementById("gate");
+  function unlock() {
+    gate.remove();
+    document.getElementById("app").hidden = false;
+    start();
+  }
+  document.getElementById("go").addEventListener("click", tryPw);
+  document.getElementById("pw").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") tryPw();
+  });
+  function tryPw() {
+    var v = document.getElementById("pw").value.trim().toLowerCase();
+    if (v === PASSCODE) { sessionStorage.setItem("c3.ok", "1"); unlock(); }
+    else document.getElementById("gerr").textContent = "Not it.";
+  }
+  if (sessionStorage.getItem("c3.ok") === "1") unlock();
+
+  /* ------------------------------------------------ storage */
+  // Every write is scoped to one document so three people writing at once
+  // can't clobber each other: picks are per-person-per-week.
+  function pickDocId(week, person) { return week + "-" + person; }
+
+  async function start() {
+    buildChrome();
+    render();
+    try {
+      db = (window.claude && window.claude.use) ? await window.claude.use("db") : null;
+    } catch (e) { db = null; }
+    if (!db) {
+      state.status = "Offline \u2014 shared saving unavailable in this view.";
+      render();
+      return;
+    }
+    db.collection("weeks").onSnapshot(function (snap) {
+      snap.docs.forEach(function (d) {
+        var v = d.data(); if (v) state.weeks[v.week] = v;
+      });
+      if (state.week == null) state.week = latestWeek();
+      buildChrome(); render();
+    }, function () {});
+    db.collection("picks").onSnapshot(function (snap) {
+      state.picks = {};
+      snap.docs.forEach(function (d) {
+        var v = d.data(); if (!v) return;
+        (state.picks[v.week] = state.picks[v.week] || {})[v.person] = v.picks || {};
+      });
+      render();
+    }, function () {});
+    db.collection("scores").onSnapshot(function (snap) {
+      snap.docs.forEach(function (d) {
+        var v = d.data(); if (v) state.scores[v.week] = v.finals || {};
+      });
+      render();
+    }, function () {});
+  }
+
+  function latestWeek() {
+    var ks = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
+    return ks.length ? ks[ks.length - 1] : null;
+  }
+
+  async function saveWeek(week, games, byes) {
+    if (!db) return note("Can't save \u2014 no connection.");
+    await db.doc("weeks/" + week).set({
+      week: week, season: SEASON, games: games, byes: byes || [],
+      savedAt: new Date().toISOString()
+    });
+    note("Week " + week + " lines saved.");
+  }
+
+  // Writes to one document are serialized and always send the COMPLETE local
+  // map. Read-then-branch racing itself was a real bug: clicking four picks
+  // quickly fired four saves that each found "doesn't exist" and full-replaced
+  // the document, so only the last pick survived.
+  var chains = {};
+  function enqueue(key, fn) {
+    chains[key] = (chains[key] || Promise.resolve()).then(fn, fn);
+    return chains[key];
+  }
+
+  function savePick(week, person, gameId, side) {
+    if (!db) { note("Can't save \u2014 no connection."); return Promise.resolve(); }
+    return enqueue("picks/" + pickDocId(week, person), function () {
+      var all = (state.picks[week] || {})[person] || {};
+      var clean = {};
+      Object.keys(all).forEach(function (k) { if (all[k]) clean[k] = all[k]; });
+      return db.doc("picks/" + pickDocId(week, person))
+        .set({ week: week, person: person, picks: clean })
+        .catch(function () { note("Couldn't save that pick \u2014 check your connection."); });
+    });
+  }
+
+  function saveScore(week) {
+    if (!db) { note("Can't save \u2014 no connection."); return Promise.resolve(); }
+    return enqueue("scores/" + week, function () {
+      var finals = state.scores[week] || {};
+      var clean = {};
+      Object.keys(finals).forEach(function (k) {
+        var s = finals[k];
+        if (s && (s.awayScore !== "" || s.homeScore !== "")) clean[k] = s;
+      });
+      return db.doc("scores/" + week).set({ week: week, finals: clean })
+        .catch(function () { note("Couldn't save that score \u2014 check your connection."); });
+    });
+  }
+
+  function note(msg) { state.status = msg; render(); }
+
+  /* ------------------------------------------------ chrome */
+  function buildChrome() {
+    var ws = document.getElementById("weekSel");
+    var keys = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
+    ws.innerHTML = keys.length
+      ? keys.map(function (w) { return '<option value="' + w + '">Week ' + w + "</option>"; }).join("")
+      : '<option value="">\u2014</option>';
+    if (state.week != null) ws.value = String(state.week);
+
+    var ms = document.getElementById("meSel");
+    ms.innerHTML = '<option value="">choose\u2026</option>' +
+      PEOPLE.map(function (p) { return '<option value="' + p + '">' + p + "</option>"; }).join("");
+    ms.value = state.me;
+  }
+
+  document.getElementById("weekSel").addEventListener("change", function (e) {
+    state.week = e.target.value ? Number(e.target.value) : null; render();
+  });
+  document.getElementById("meSel").addEventListener("change", function (e) {
+    state.me = e.target.value; localStorage.setItem("c3.me", state.me); render();
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (t) {
+    t.addEventListener("click", function () {
+      state.tab = t.dataset.pane;
+      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) {
+        x.setAttribute("aria-selected", String(x === t));
+      });
+      ["picks", "scores", "standings", "lines"].forEach(function (p) {
+        document.getElementById("pane-" + p).hidden = (p !== state.tab);
+      });
+      render();
+    });
+  });
+
+  /* ------------------------------------------------ helpers */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function gamesFor(w) { return (state.weeks[w] || {}).games || []; }
+  function picksFor(w) { return state.picks[w] || {}; }
+  function scoresFor(w) { return state.scores[w] || {}; }
+  function pickOf(w, person, gid) { return ((picksFor(w)[person] || {})[gid]) || null; }
+  function votesFor(w, gid) {
+    var o = {};
+    PEOPLE.forEach(function (p) { var v = pickOf(w, p, gid); if (v) o[p] = v; });
+    return o;
+  }
+  function resultOf(w, g) { return P.atsWinner(g, scoresFor(w)[g.id]); }
+  function spreadLabel(g, side) {
+    if (g.spread == null || !g.favored) return "";
+    if (g.favored !== side) return "+" + fmt(g.spread);
+    return "\u2212" + fmt(g.spread);
+  }
+  function fmt(n) { return (Math.round(Number(n) * 10) / 10).toString(); }
+  function recStr(r) { return r.w + "-" + r.l + (r.p ? "-" + r.p : ""); }
+  function pctStr(r) {
+    var d = r.w + r.l;
+    return d ? (Math.round((r.w / d) * 1000) / 10).toFixed(1) + "%" : "\u2014";
+  }
+
+  /* ------------------------------------------------ render */
+  function render() {
+    if (document.getElementById("app").hidden) return;
+    renderPicks();
+    renderScores();
+    renderStandings();
+    renderLines();
+  }
+
+  function renderPicks() {
+    var el = document.getElementById("pane-picks");
+    var w = state.week, gs = gamesFor(w);
+    if (!gs.length) {
+      el.innerHTML = empty("No lines yet",
+        "Upload this week's spreads PDF on the Lines tab to get started.");
+      return;
+    }
+    if (!state.me) {
+      el.innerHTML = empty("Who are you?",
+        "Pick your name up top so your picks are saved as yours.");
+      return;
+    }
+    var byes = (state.weeks[w] || {}).byes || [];
+    var made = gs.filter(function (g) { return pickOf(w, state.me, g.id); }).length;
+    var h = '<div class="head"><div><h2>Week ' + w + " Picks</h2>" +
+      '<p>' + made + " of " + gs.length + " in for " + esc(state.me) +
+      (byes.length ? " &middot; bye: " + esc(byes.join(", ")) : "") + "</p></div></div>";
+
+    var day = null;
+    h += '<div class="games">';
+    gs.forEach(function (g) {
+      if (g.day && g.day !== day) { day = g.day; h += '<div class="daymark">' + esc(day) + "</div>"; }
+      h += gameRow(w, g);
+    });
+    h += "</div>" + statusLine();
+    el.innerHTML = h;
+
+    Array.prototype.forEach.call(el.querySelectorAll(".side"), function (b) {
+      b.addEventListener("click", function () {
+        var gid = b.dataset.gid, side = b.dataset.side;
+        if (!state.me) return;
+        var cur = pickOf(w, state.me, gid);
+        var next = cur === side ? null : side;
+        (state.picks[w] = state.picks[w] || {});
+        (state.picks[w][state.me] = state.picks[w][state.me] || {})[gid] = next;
+        render();
+        savePick(w, state.me, gid, next);
+      });
+    });
+  }
+
+  function gameRow(w, g) {
+    var votes = votesFor(w, g.id);
+    var maj = P.majority(votes, PEOPLE);
+    var res = resultOf(w, g);
+    var sc = scoresFor(w)[g.id];
+    var mine = pickOf(w, state.me, g.id);
+
+    var cls = "";
+    if (res && maj) cls = res === "push" ? " graded-p" : (res === maj ? " graded-w" : " graded-l");
+
+    function side(which, name) {
+      var pressed = mine === which;
+      var isAts = res && res !== "push" && res === which;
+      return '<button class="side' + (isAts ? " is-ats" : "") + '" data-gid="' +
+        esc(g.id) + '" data-side="' + which + '" aria-pressed="' + pressed + '">' +
+        '<span class="nm">' + esc(name) + "</span>" +
+        '<span class="sp">' + spreadLabel(g, which) + "</span></button>";
+    }
+
+    var dots = PEOPLE.map(function (p) {
+      var v = votes[p];
+      return '<span class="dot' + (v === "away" ? " a" : v === "home" ? " h" : "") +
+        '" title="' + esc(p) + (v ? ": " + (v === "away" ? g.away : g.home) : ": no pick") + '">' +
+        esc(p[0]) + "</span>";
+    }).join("");
+
+    var chips = "";
+    if (maj) {
+      var mn = maj === "away" ? g.away : g.home;
+      if (res === "push") chips += '<span class="chip push">Push</span>';
+      else if (res) chips += '<span class="chip ' + (res === maj ? "win" : "loss") + '">' +
+        (res === maj ? "Group \u2713" : "Group \u2717") + "</span>";
+      else chips += '<span class="chip">Group: ' + esc(mn) + "</span>";
+    } else {
+      chips += '<span class="chip">' + Object.keys(votes).length + "/3 in</span>";
+    }
+
+    return '<article class="game' + cls + '">' +
+      '<div class="sides">' + side("away", g.away) + side("home", g.home) + "</div>" +
+      '<div class="meta">' +
+        (g.note ? '<span class="note">' + esc(g.note) + "</span>" : "") +
+        '<div class="votes">' + dots + "</div>" + chips +
+        (sc && sc.awayScore !== "" && sc.homeScore !== ""
+          ? '<span class="final num">' + esc(sc.awayScore) + "\u2013" + esc(sc.homeScore) + "</span>" : "") +
+      "</div></article>";
+  }
+
+  /* ------------------------------------------------ scores */
+  function renderScores() {
+    var el = document.getElementById("pane-scores");
+    var w = state.week, gs = gamesFor(w);
+    if (!gs.length) { el.innerHTML = empty("No lines yet", "Upload a PDF on the Lines tab."); return; }
+    var sc = scoresFor(w);
+    var h = '<div class="head"><div><h2>Week ' + w + " Final Scores</h2>" +
+      "<p>Type finals and everything grades itself. Blank rows stay ungraded.</p></div></div>";
+    h += '<div class="tablewrap"><table><thead><tr><th>Game</th><th>Away</th><th>Home</th>' +
+      "<th>ATS result</th></tr></thead><tbody>";
+    gs.forEach(function (g) {
+      var s = sc[g.id] || {};
+      var r = P.atsWinner(g, s);
+      var lab = r === "push" ? '<span class="chip push">Push</span>'
+        : r ? '<span class="chip win">' + esc(r === "away" ? g.away : g.home) + " covers</span>"
+        : '<span class="chip">\u2014</span>';
+      h += "<tr><td>" + esc(g.away) + " at " + esc(g.home) +
+        '<br><span class="muted num">' + (g.favored ? esc(g.favored === "away" ? g.away : g.home) +
+          " \u2212" + fmt(g.spread) : "no line") + "</span></td>" +
+        '<td><input class="num sc" data-gid="' + esc(g.id) + '" data-k="awayScore" inputmode="numeric" ' +
+          'style="width:70px" value="' + esc(s.awayScore == null ? "" : s.awayScore) + '"></td>' +
+        '<td><input class="num sc" data-gid="' + esc(g.id) + '" data-k="homeScore" inputmode="numeric" ' +
+          'style="width:70px" value="' + esc(s.homeScore == null ? "" : s.homeScore) + '"></td>' +
+        "<td>" + lab + "</td></tr>";
+    });
+    h += "</tbody></table></div>" + statusLine();
+    el.innerHTML = h;
+
+    Array.prototype.forEach.call(el.querySelectorAll(".sc"), function (i) {
+      i.addEventListener("change", function () {
+        var gid = i.dataset.gid, k = i.dataset.k;
+        var cur = (scoresFor(w)[gid]) || { awayScore: "", homeScore: "" };
+        var next = { awayScore: cur.awayScore == null ? "" : cur.awayScore,
+                     homeScore: cur.homeScore == null ? "" : cur.homeScore };
+        next[k] = i.value.trim() === "" ? "" : Number(i.value);
+        (state.scores[w] = state.scores[w] || {})[gid] = next;
+        render();
+        saveScore(w);
+      });
+    });
+  }
+
+  /* ------------------------------------------------ standings */
+  function renderStandings() {
+    var el = document.getElementById("pane-standings");
+    var weeks = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
+    if (!weeks.length) { el.innerHTML = empty("Nothing to score yet", "Upload a week and make some picks."); return; }
+
+    function seasonRec(sideFor) {
+      var t = { w: 0, l: 0, p: 0 };
+      weeks.forEach(function (wk) {
+        var r = P.tally(gamesFor(wk), function (g) { return sideFor(wk, g); },
+          function (g) { return resultOf(wk, g); });
+        t.w += r.w; t.l += r.l; t.p += r.p;
+      });
+      return t;
+    }
+    var groupSide = function (wk, g) { return P.majority(votesFor(wk, g.id), PEOPLE); };
+    var group = seasonRec(groupSide);
+
+    var h = '<div class="head"><div><h2>Standings</h2><p>Against the spread, ' +
+      SEASON + " season. Pushes are void.</p></div></div>";
+    h += '<div class="cards"><div class="card lead"><h3>The Group</h3>' +
+      '<div class="rec">' + recStr(group) + '</div><div class="pct">' + pctStr(group) +
+      " &middot; majority pick</div></div>";
+    var indiv = PEOPLE.map(function (p) {
+      return { p: p, r: seasonRec(function (wk, g) { return pickOf(wk, p, g.id); }) };
+    });
+    var best = indiv.slice().sort(function (a, b) {
+      return (b.r.w - b.r.l) - (a.r.w - a.r.l);
+    })[0];
+    indiv.forEach(function (x) {
+      h += '<div class="card' + (x.r.w + x.r.l && x === best ? " lead" : "") + '"><h3>' + esc(x.p) +
+        '</h3><div class="rec">' + recStr(x.r) + '</div><div class="pct">' + pctStr(x.r) + "</div></div>";
+    });
+    h += "</div>";
+
+    h += '<div class="tablewrap"><table><thead><tr><th>Week</th><th>Group</th>' +
+      PEOPLE.map(function (p) { return "<th>" + esc(p) + "</th>"; }).join("") +
+      "<th>Graded</th></tr></thead><tbody>";
+    weeks.forEach(function (wk) {
+      var gs = gamesFor(wk);
+      var graded = gs.filter(function (g) { return resultOf(wk, g); }).length;
+      var gr = P.tally(gs, function (g) { return groupSide(wk, g); }, function (g) { return resultOf(wk, g); });
+      h += "<tr><td>Week " + wk + '</td><td class="n">' + recStr(gr) + "</td>" +
+        PEOPLE.map(function (p) {
+          var r = P.tally(gs, function (g) { return pickOf(wk, p, g.id); },
+            function (g) { return resultOf(wk, g); });
+          return '<td class="n">' + recStr(r) + "</td>";
+        }).join("") +
+        '<td class="n">' + graded + "/" + gs.length + "</td></tr>";
+    });
+    h += "</tbody></table></div>";
+    el.innerHTML = h;
+  }
+
+  /* ------------------------------------------------ lines */
+  function renderLines() {
+    var el = document.getElementById("pane-lines");
+    var d = state.draft;
+    var h = '<div class="head"><div><h2>Weekly Lines</h2>' +
+      "<p>Upload the commissioner's PDF. Check what it read before saving \u2014 " +
+      "the spread's position on the page is what says who's favored.</p></div></div>";
+
+    h += '<div class="drop" id="drop"><button class="btn" id="pick">Choose PDF</button>' +
+      "<p>or drop it here</p>" +
+      '<input type="file" id="file" accept="application/pdf" hidden></div>';
+    h += '<div class="row"><button class="btn ghost" id="blank">Start a blank week</button>' +
+      '<span class="muted">No PDF? Enter the games by hand.</span></div>';
+
+    if (d) {
+      h += '<div class="row"><label class="who">Week <input class="num" id="dweek" ' +
+        'style="width:70px" value="' + esc(d.week == null ? "" : d.week) + '"></label>' +
+        '<span class="muted">' + d.games.length + " games</span></div>";
+      if (d.warnings && d.warnings.length) {
+        h += '<div class="warn"><b>Check these before saving:</b><ul>' +
+          d.warnings.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>";
+      }
+      h += '<div class="edithead"><span>Day</span><span>Away</span><span>Home</span>' +
+        "<span>Spread</span><span>Favored</span><span></span></div>";
+      d.games.forEach(function (g, i) {
+        h += '<div class="edit" data-i="' + i + '">' +
+          '<input data-k="day" value="' + esc(g.day) + '" placeholder="Day">' +
+          '<input data-k="away" value="' + esc(g.away) + '" placeholder="Away">' +
+          '<input data-k="home" value="' + esc(g.home) + '" placeholder="Home">' +
+          '<input data-k="spread" class="num" value="' + esc(g.spread == null ? "" : g.spread) + '" placeholder="\u2014">' +
+          '<select data-k="favored">' +
+            '<option value=""' + (!g.favored ? " selected" : "") + ">\u2014</option>" +
+            '<option value="away"' + (g.favored === "away" ? " selected" : "") + ">Away</option>" +
+            '<option value="home"' + (g.favored === "home" ? " selected" : "") + ">Home</option>" +
+          "</select>" +
+          '<button class="x" data-del="' + i + '" title="Remove">&times;</button></div>';
+      });
+      h += '<div class="row"><button class="btn ghost" id="addrow">+ Add game</button>' +
+        '<label class="who">Byes <input id="dbyes" style="width:220px" value="' +
+        esc((d.byes || []).join(", ")) + '"></label></div>';
+      h += '<div class="row"><button class="btn" id="save">Save Week ' +
+        esc(d.week == null ? "" : d.week) + '</button>' +
+        '<button class="btn ghost" id="cancel">Discard</button></div>';
+    }
+    h += statusLine();
+    el.innerHTML = h;
+
+    var file = document.getElementById("file");
+    document.getElementById("pick").addEventListener("click", function () { file.click(); });
+    file.addEventListener("change", function () { if (file.files[0]) readPdf(file.files[0]); });
+    var drop = document.getElementById("drop");
+    ["dragenter", "dragover"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("over"); });
+    });
+    drop.addEventListener("drop", function (e) {
+      var f = e.dataTransfer.files[0]; if (f) readPdf(f);
+    });
+    document.getElementById("blank").addEventListener("click", function () {
+      state.draft = { week: latestWeek() ? latestWeek() + 1 : 1, games: [], byes: [], warnings: [] };
+      addRow(); render();
+    });
+
+    if (!d) return;
+    document.getElementById("dweek").addEventListener("change", function (e) {
+      state.draft.week = e.target.value ? Number(e.target.value) : null; render();
+    });
+    document.getElementById("dbyes").addEventListener("change", function (e) {
+      state.draft.byes = e.target.value.split(",").map(function (s) { return s.trim(); })
+        .filter(Boolean);
+    });
+    Array.prototype.forEach.call(el.querySelectorAll(".edit [data-k]"), function (inp) {
+      inp.addEventListener("change", function () {
+        var i = Number(inp.closest(".edit").dataset.i), k = inp.dataset.k;
+        var v = inp.value;
+        if (k === "spread") v = v.trim() === "" ? null : Number(v);
+        state.draft.games[i][k] = v;
+        if (k === "away" || k === "home") {
+          var g = state.draft.games[i];
+          g.id = (g.away + "-" + g.home).toLowerCase().replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+        }
+      });
+    });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-del]"), function (b) {
+      b.addEventListener("click", function () {
+        state.draft.games.splice(Number(b.dataset.del), 1); render();
+      });
+    });
+    document.getElementById("addrow").addEventListener("click", function () { addRow(); render(); });
+    document.getElementById("cancel").addEventListener("click", function () {
+      state.draft = null; render();
+    });
+    document.getElementById("save").addEventListener("click", async function () {
+      var dd = state.draft;
+      if (dd.week == null || !dd.games.length) return note("Need a week number and at least one game.");
+      var bad = dd.games.filter(function (g) { return !g.away || !g.home; });
+      if (bad.length) return note("Every game needs both teams.");
+      if (state.weeks[dd.week] &&
+          !confirm("Week " + dd.week + " already has lines saved. Overwrite them?\n\n" +
+                   "Existing picks are kept, but any game whose teams changed will lose its picks."))
+        return;
+      await saveWeek(dd.week, dd.games, dd.byes);
+      state.week = dd.week; state.draft = null;
+      buildChrome(); render();
+    });
+  }
+
+  function addRow() {
+    state.draft.games.push({ id: "g" + Date.now() + Math.random().toString(36).slice(2, 6),
+      day: "", away: "", home: "", spread: null, favored: null, note: "" });
+  }
+
+  /* ------------------------------------------------ pdf */
+  async function readPdf(f) {
+    note("Reading " + f.name + "\u2026");
+    try {
+      if (!window.pdfjsLib) throw new Error("PDF library didn't load");
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      var buf = await f.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      var words = [], pageWidth = 612;
+      for (var n = 1; n <= pdf.numPages; n++) {
+        var page = await pdf.getPage(n);
+        pageWidth = page.view[2] || pageWidth;
+        var tc = await page.getTextContent();
+        var offset = (n - 1) * 2000;      // stack pages vertically, top page first
+        tc.items.forEach(function (it) {
+          if (!it.str || !it.str.trim()) return;
+          words.push({ str: it.str, x: it.transform[4], y: it.transform[5] - offset,
+                       w: it.width || 0 });
+        });
+      }
+      var out = P.parseWords(words, pageWidth);
+      if (!out.games.length) {
+        state.draft = { week: null, games: [], byes: out.byes, warnings: out.warnings };
+        addRow();
+        note("Couldn't find any games in that PDF \u2014 enter them by hand below.");
+      } else {
+        state.draft = out;
+        note("Read " + out.games.length + " games. Check the favored column before saving.");
+      }
+    } catch (e) {
+      state.draft = { week: null, games: [], byes: [], warnings: ["PDF error: " + e.message] };
+      addRow();
+      note("Couldn't read that PDF \u2014 enter the games by hand below.");
+    }
+  }
+
+  /* ------------------------------------------------ bits */
+  function empty(title, sub) {
+    return '<div class="empty"><h3>' + esc(title) + "</h3><p>" + esc(sub) + "</p></div>";
+  }
+  function statusLine() {
+    return state.status ? '<p class="status">' + esc(state.status) + "</p>" : '<p class="status"></p>';
+  }
+})();
+</script>
