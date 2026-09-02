@@ -10,9 +10,10 @@ both the group's record and each person's individual accuracy.
 
 ## Where it runs
 
-**The app:** published as a Claude Artifact, which is what gives it a shared
-database all three people write to from their own devices. The link lives with
-Peter.
+**The app:** https://claude.ai/code/artifact/03fc058e-57ac-4d6d-92ed-26c46cd337c3 — published as
+a Claude Artifact, which is what gives it a shared
+database all three people write to from their own devices. Share it from the
+page's share menu to let Dalton and Hunter in.
 
 **This repo:** the source, the tests, and the tooling.
 
