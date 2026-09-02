@@ -659,7 +659,19 @@ window.FIREBASE_CONFIG = {
         '<span class="muted">' + d.games.length + " games</span></div>";
       if (d.warnings && d.warnings.length) {
         h += '<div class="warn"><b>Check these before saving:</b><ul>' +
-          d.warnings.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>";
+          d.warnings.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" +
+          "<p style=\"margin:.5rem 0 0\">Fill anything missing in by hand below — " +
+          "nothing is saved until you hit save.</p></div>";
+      }
+      if (d.debug) {
+        h += '<details style="margin:.6rem 0"><summary class="muted" style="cursor:pointer">' +
+          "Show what the PDF actually contained</summary>" +
+          '<textarea readonly id="dbg" style="width:100%;height:190px;margin-top:.5rem;' +
+          'font-family:var(--mono);font-size:.72rem;background:var(--panel-2);' +
+          'color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:.6rem">' +
+          esc(d.debug) + "</textarea>" +
+          '<p class="muted" style="margin:.4rem 0 0">Each line is x,y then the text. ' +
+          "Copy this if a spread is still being missed.</p></details>";
       }
       h += '<div class="edithead"><span>Day</span><span>Away</span><span>Home</span>' +
         "<span>Spread</span><span>Favored</span><span></span></div>";
@@ -811,6 +823,11 @@ window.FIREBASE_CONFIG = {
         });
       }
       var out = P.parseWords(words, pageWidth);
+      // Keep what the PDF actually contained. If a spread still goes missing,
+      // this is the only way to see why without having the file to hand.
+      out.debug = words.map(function (x) {
+        return Math.round(x.x) + "," + Math.round(x.y) + "  " + x.str;
+      }).join("\n");
       if (!out.games.length) {
         state.draft = { week: null, games: [], byes: out.byes, warnings: out.warnings };
         addRow();

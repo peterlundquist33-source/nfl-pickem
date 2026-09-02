@@ -243,21 +243,464 @@ window.FIREBASE_CONFIG = {
 const DAYS = ["monday", "tuesday", "wednesday", "thursday",
               "friday", "saturday", "sunday"];
 
-// "5 1/2" -> 5.5, "11 1/2" -> 11.5, "7" -> 7, "3.5" -> 3.5
-const NUM_RE = /^\d{1,2}(\.\d+)?$/;
+// A spread can arrive as "5 1/2" (two tokens), "5 1/2" (one), "5½" (one glyph),
+// "½" on its own, "7", "3.5", or "PK". Real sheets use the vulgar-fraction
+// characters far more often than "1/2", and missing them made whole games look
+// like they had no spread at all.
+const VULGAR = { "½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3,
+                 "⅛": 0.125, "⅜": 0.375, "⅝": 0.625, "⅞": 0.875 };
+const VULGAR_CLASS = "½¼¾⅓⅔⅛⅜⅝⅞";
+
+const NUM_RE = new RegExp(`^\\d{1,2}(\\.\\d+)?[${VULGAR_CLASS}]?<title>Rizzlers Pick'ems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* An odds-board look: warm amber figures on near-black, the way a sportsbook
+   wall reads. Deliberately single-theme — every color is painted explicitly so
+   the page holds on either host ground. */
+:root{
+  --ink:#0e1116; --panel:#161a21; --panel-2:#1d222b; --line:#2a313c;
+  --text:#eef1f5; --muted:#98a2b0; --dim:#6b7482;
+  --amber:#ffb020; --amber-dim:#3a2c12;
+  --win:#3ecf8e; --loss:#f2555f; --push:#8b95a3;
+  --radius:10px;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --cond:"Barlow Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--ink);color:var(--text);font-family:var(--sans);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-family:var(--cond);font-weight:700;letter-spacing:.01em;
+  text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1000px;margin:0 auto;padding:0 1.1rem 4rem}
+
+/* ---------- gate ---------- */
+#gate{position:fixed;inset:0;z-index:100;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;padding:1.2rem}
+.gate-card{width:100%;max-width:360px;text-align:center}
+.gate-card h1{font-size:2.6rem;line-height:1;letter-spacing:.04em;
+  text-transform:uppercase}
+.gate-card h1 span{color:var(--amber)}
+.gate-sub{color:var(--muted);font-size:.86rem;margin:.5rem 0 1.6rem}
+.gate-row{display:flex;gap:.5rem}
+input,select{font:inherit;background:var(--panel-2);color:var(--text);
+  border:1px solid var(--line);border-radius:8px;padding:.6rem .75rem;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--amber);
+  outline-offset:2px}
+.btn{background:var(--amber);color:#1a1206;border:0;border-radius:8px;
+  padding:.6rem 1rem;font-family:var(--cond);font-weight:700;font-size:1rem;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--amber);color:var(--amber)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.err{color:var(--loss);font-size:.82rem;margin-top:.7rem;min-height:1.2em}
+
+/* ---------- chrome ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(14,17,22,.94);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1000px;margin:0 auto;padding:.7rem 1.1rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.brand{font-family:var(--cond);font-weight:700;font-size:1.1rem;
+  letter-spacing:.12em;text-transform:uppercase}
+.brand span{color:var(--amber)}
+.spacer{margin-left:auto}
+.who{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:var(--muted)}
+.who b{color:var(--text)}
+.tabs{display:flex;gap:.3rem;border-bottom:1px solid var(--line);
+  max-width:1000px;margin:0 auto;padding:0 1.1rem}
+.tab{background:none;border:0;padding:.7rem .1rem;margin-right:1.3rem;
+  font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);border-bottom:2px solid transparent;
+  margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--amber);border-bottom-color:var(--amber)}
+.tab:hover{color:var(--text)}
+
+.head{padding:1.5rem 0 1.1rem;display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap}
+.head h2{font-size:1.7rem;text-transform:uppercase;letter-spacing:.03em}
+.head p{margin:.2rem 0 0;color:var(--muted);font-size:.85rem}
+
+/* ---------- game rows ---------- */
+.games{display:flex;flex-direction:column;gap:.4rem}
+.daymark{font-family:var(--cond);font-weight:700;font-size:.78rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin:1rem 0 .1rem}
+.game{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.7rem .85rem;display:grid;grid-template-columns:1fr auto;gap:.7rem;
+  align-items:center}
+.game.graded-w{border-left:3px solid var(--win)}
+.game.graded-l{border-left:3px solid var(--loss)}
+.game.graded-p{border-left:3px solid var(--push)}
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.side{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+  padding:.5rem .65rem;text-align:left;transition:border-color .12s,background .12s}
+.side:hover{border-color:var(--dim)}
+.side .nm{font-weight:600;font-size:.9rem}
+.side .sp{font-family:var(--mono);font-size:.8rem;color:var(--amber);font-weight:600}
+.side[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-dim)}
+.side.is-ats{box-shadow:inset 0 0 0 1px var(--win)}
+.side:disabled{cursor:default;opacity:.75}
+.meta{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;min-width:104px}
+.note{font-size:.7rem;color:var(--amber);letter-spacing:.04em;text-transform:uppercase;
+  font-family:var(--cond);font-weight:700}
+.votes{display:flex;gap:.22rem}
+.dot{width:20px;height:20px;border-radius:50%;font-size:.62rem;font-weight:700;
+  display:grid;place-items:center;background:var(--panel-2);color:var(--dim);
+  border:1px solid var(--line);font-family:var(--cond)}
+.dot.a{background:var(--amber-dim);border-color:var(--amber);color:var(--amber)}
+.dot.h{background:#12233a;border-color:#2f6fb5;color:#7db4f0}
+.chip{font-family:var(--cond);font-weight:700;font-size:.66rem;letter-spacing:.08em;
+  text-transform:uppercase;padding:.14rem .42rem;border-radius:4px;
+  background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.chip.win{color:var(--win);border-color:var(--win)}
+.chip.loss{color:var(--loss);border-color:var(--loss)}
+.chip.push{color:var(--push);border-color:var(--push)}
+.final{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+
+/* ---------- standings ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.9rem 1rem}
+.card.lead{border-color:var(--amber)}
+.card h3{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.card .rec{font-family:var(--mono);font-size:1.85rem;font-weight:600;margin-top:.3rem;
+  letter-spacing:-.02em}
+.card .pct{font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);
+  margin-top:1rem}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.86rem}
+th,td{padding:.55rem .7rem;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:var(--cond);font-weight:700;font-size:.72rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);background:var(--panel)}
+tbody tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- lines editor ---------- */
+.drop{border:1.5px dashed var(--line);border-radius:var(--radius);padding:1.6rem 1rem;
+  text-align:center;background:var(--panel);transition:border-color .15s}
+.drop.over{border-color:var(--amber);background:var(--amber-dim)}
+.drop p{margin:.4rem 0 0;color:var(--muted);font-size:.85rem}
+.edit{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+  align-items:center;padding:.35rem 0}
+.edit input,.edit select{padding:.4rem .5rem;font-size:.85rem}
+.edit .x{background:none;border:1px solid var(--line);border-radius:6px;color:var(--dim);
+  padding:.35rem;line-height:1}
+.edit .x:hover{color:var(--loss);border-color:var(--loss)}
+.edithead{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+  font-family:var(--cond);font-weight:700;font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);padding-bottom:.3rem;
+  border-bottom:1px solid var(--line);margin-top:1rem}
+.warn{background:#2a1f0c;border:1px solid #6b5013;border-radius:8px;padding:.7rem .9rem;
+  font-size:.83rem;color:#f0cd7f;margin:.9rem 0}
+.warn ul{margin:.4rem 0 0;padding-left:1.1rem}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+.muted{color:var(--muted);font-size:.85rem}
+.empty{text-align:center;padding:3rem 1rem;color:var(--dim)}
+.empty h3{font-size:1.1rem;color:var(--muted);margin-bottom:.3rem}
+.status{font-size:.78rem;color:var(--dim);min-height:1.2em;margin-top:.5rem}
+@media (max-width:620px){
+  .edit,.edithead{grid-template-columns:1fr 1fr;gap:.35rem}
+  .edithead{display:none}
+  .game{grid-template-columns:1fr}
+  .meta{align-items:flex-start;flex-direction:row;flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="gate">
+  <div class="gate-card">
+    <h1>Rizzlers <span>Pick&#39;ems</span></h1>
+    <p class="gate-sub">Pick'em against the spread &middot; Peter, Dalton, Hunter</p>
+    <div class="gate-row">
+      <input id="pw" type="password" placeholder="Passcode" autocomplete="current-password">
+      <button class="btn" id="go">Enter</button>
+    </div>
+    <p class="err" id="gerr"></p>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">Rizzlers <span>Pick&#39;ems</span></div>
+      <div class="spacer"></div>
+      <label class="who">Week
+        <select id="weekSel" style="width:auto"></select>
+      </label>
+      <label class="who">You are
+        <select id="meSel" style="width:auto"></select>
+      </label>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-pane="picks" aria-selected="true">Picks</button>
+      <button class="tab" role="tab" data-pane="scores" aria-selected="false">Scores</button>
+      <button class="tab" role="tab" data-pane="standings" aria-selected="false">Standings</button>
+      <button class="tab" role="tab" data-pane="lines" aria-selected="false">Lines</button>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="pane-picks"></section>
+    <section id="pane-scores" hidden></section>
+    <section id="pane-standings" hidden></section>
+    <section id="pane-lines" hidden></section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-firestore-compat.min.js"></script>
+<script>
+/* Firebase web config. These are PUBLIC identifiers, not secrets — Google
+   documents them as safe to commit. What actually protects the data is
+   firestore.rules in this repo, plus the passcode gate. */
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCtUp7DYEjdE5i_Vt9oTqzpmNAgHP32xy8",
+  authDomain: "rizzlers-pickems.firebaseapp.com",
+  projectId: "rizzlers-pickems",
+  storageBucket: "rizzlers-pickems.firebasestorage.app",
+  messagingSenderId: "401907218298",
+  appId: "1:401907218298:web:795ef076067ee1926b88c3"
+};
+</script>
+<script>
+);
+const VULGAR_ONLY_RE = new RegExp(`^[${VULGAR_CLASS}]<title>Rizzlers Pick'ems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* An odds-board look: warm amber figures on near-black, the way a sportsbook
+   wall reads. Deliberately single-theme — every color is painted explicitly so
+   the page holds on either host ground. */
+:root{
+  --ink:#0e1116; --panel:#161a21; --panel-2:#1d222b; --line:#2a313c;
+  --text:#eef1f5; --muted:#98a2b0; --dim:#6b7482;
+  --amber:#ffb020; --amber-dim:#3a2c12;
+  --win:#3ecf8e; --loss:#f2555f; --push:#8b95a3;
+  --radius:10px;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --cond:"Barlow Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--ink);color:var(--text);font-family:var(--sans);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-family:var(--cond);font-weight:700;letter-spacing:.01em;
+  text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1000px;margin:0 auto;padding:0 1.1rem 4rem}
+
+/* ---------- gate ---------- */
+#gate{position:fixed;inset:0;z-index:100;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;padding:1.2rem}
+.gate-card{width:100%;max-width:360px;text-align:center}
+.gate-card h1{font-size:2.6rem;line-height:1;letter-spacing:.04em;
+  text-transform:uppercase}
+.gate-card h1 span{color:var(--amber)}
+.gate-sub{color:var(--muted);font-size:.86rem;margin:.5rem 0 1.6rem}
+.gate-row{display:flex;gap:.5rem}
+input,select{font:inherit;background:var(--panel-2);color:var(--text);
+  border:1px solid var(--line);border-radius:8px;padding:.6rem .75rem;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--amber);
+  outline-offset:2px}
+.btn{background:var(--amber);color:#1a1206;border:0;border-radius:8px;
+  padding:.6rem 1rem;font-family:var(--cond);font-weight:700;font-size:1rem;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--amber);color:var(--amber)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.err{color:var(--loss);font-size:.82rem;margin-top:.7rem;min-height:1.2em}
+
+/* ---------- chrome ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(14,17,22,.94);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1000px;margin:0 auto;padding:.7rem 1.1rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.brand{font-family:var(--cond);font-weight:700;font-size:1.1rem;
+  letter-spacing:.12em;text-transform:uppercase}
+.brand span{color:var(--amber)}
+.spacer{margin-left:auto}
+.who{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:var(--muted)}
+.who b{color:var(--text)}
+.tabs{display:flex;gap:.3rem;border-bottom:1px solid var(--line);
+  max-width:1000px;margin:0 auto;padding:0 1.1rem}
+.tab{background:none;border:0;padding:.7rem .1rem;margin-right:1.3rem;
+  font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);border-bottom:2px solid transparent;
+  margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--amber);border-bottom-color:var(--amber)}
+.tab:hover{color:var(--text)}
+
+.head{padding:1.5rem 0 1.1rem;display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap}
+.head h2{font-size:1.7rem;text-transform:uppercase;letter-spacing:.03em}
+.head p{margin:.2rem 0 0;color:var(--muted);font-size:.85rem}
+
+/* ---------- game rows ---------- */
+.games{display:flex;flex-direction:column;gap:.4rem}
+.daymark{font-family:var(--cond);font-weight:700;font-size:.78rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin:1rem 0 .1rem}
+.game{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.7rem .85rem;display:grid;grid-template-columns:1fr auto;gap:.7rem;
+  align-items:center}
+.game.graded-w{border-left:3px solid var(--win)}
+.game.graded-l{border-left:3px solid var(--loss)}
+.game.graded-p{border-left:3px solid var(--push)}
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.side{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+  padding:.5rem .65rem;text-align:left;transition:border-color .12s,background .12s}
+.side:hover{border-color:var(--dim)}
+.side .nm{font-weight:600;font-size:.9rem}
+.side .sp{font-family:var(--mono);font-size:.8rem;color:var(--amber);font-weight:600}
+.side[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-dim)}
+.side.is-ats{box-shadow:inset 0 0 0 1px var(--win)}
+.side:disabled{cursor:default;opacity:.75}
+.meta{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;min-width:104px}
+.note{font-size:.7rem;color:var(--amber);letter-spacing:.04em;text-transform:uppercase;
+  font-family:var(--cond);font-weight:700}
+.votes{display:flex;gap:.22rem}
+.dot{width:20px;height:20px;border-radius:50%;font-size:.62rem;font-weight:700;
+  display:grid;place-items:center;background:var(--panel-2);color:var(--dim);
+  border:1px solid var(--line);font-family:var(--cond)}
+.dot.a{background:var(--amber-dim);border-color:var(--amber);color:var(--amber)}
+.dot.h{background:#12233a;border-color:#2f6fb5;color:#7db4f0}
+.chip{font-family:var(--cond);font-weight:700;font-size:.66rem;letter-spacing:.08em;
+  text-transform:uppercase;padding:.14rem .42rem;border-radius:4px;
+  background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.chip.win{color:var(--win);border-color:var(--win)}
+.chip.loss{color:var(--loss);border-color:var(--loss)}
+.chip.push{color:var(--push);border-color:var(--push)}
+.final{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+
+/* ---------- standings ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.9rem 1rem}
+.card.lead{border-color:var(--amber)}
+.card h3{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.card .rec{font-family:var(--mono);font-size:1.85rem;font-weight:600;margin-top:.3rem;
+  letter-spacing:-.02em}
+.card .pct{font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);
+  margin-top:1rem}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.86rem}
+th,td{padding:.55rem .7rem;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:var(--cond);font-weight:700;font-size:.72rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);background:var(--panel)}
+tbody tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- lines editor ---------- */
+.drop{border:1.5px dashed var(--line);border-radius:var(--radius);padding:1.6rem 1rem;
+  text-align:center;background:var(--panel);transition:border-color .15s}
+.drop.over{border-color:var(--amber);background:var(--amber-dim)}
+.drop p{margin:.4rem 0 0;color:var(--muted);font-size:.85rem}
+.edit{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+  align-items:center;padding:.35rem 0}
+.edit input,.edit select{padding:.4rem .5rem;font-size:.85rem}
+.edit .x{background:none;border:1px solid var(--line);border-radius:6px;color:var(--dim);
+  padding:.35rem;line-height:1}
+.edit .x:hover{color:var(--loss);border-color:var(--loss)}
+.edithead{display:grid;grid-template-columns:88px 1fr 1fr 76px 96px 34px;gap:.4rem;
+  font-family:var(--cond);font-weight:700;font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);padding-bottom:.3rem;
+  border-bottom:1px solid var(--line);margin-top:1rem}
+.warn{background:#2a1f0c;border:1px solid #6b5013;border-radius:8px;padding:.7rem .9rem;
+  font-size:.83rem;color:#f0cd7f;margin:.9rem 0}
+.warn ul{margin:.4rem 0 0;padding-left:1.1rem}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+.muted{color:var(--muted);font-size:.85rem}
+.empty{text-align:center;padding:3rem 1rem;color:var(--dim)}
+.empty h3{font-size:1.1rem;color:var(--muted);margin-bottom:.3rem}
+.status{font-size:.78rem;color:var(--dim);min-height:1.2em;margin-top:.5rem}
+@media (max-width:620px){
+  .edit,.edithead{grid-template-columns:1fr 1fr;gap:.35rem}
+  .edithead{display:none}
+  .game{grid-template-columns:1fr}
+  .meta{align-items:flex-start;flex-direction:row;flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="gate">
+  <div class="gate-card">
+    <h1>Rizzlers <span>Pick&#39;ems</span></h1>
+    <p class="gate-sub">Pick'em against the spread &middot; Peter, Dalton, Hunter</p>
+    <div class="gate-row">
+      <input id="pw" type="password" placeholder="Passcode" autocomplete="current-password">
+      <button class="btn" id="go">Enter</button>
+    </div>
+    <p class="err" id="gerr"></p>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">Rizzlers <span>Pick&#39;ems</span></div>
+      <div class="spacer"></div>
+      <label class="who">Week
+        <select id="weekSel" style="width:auto"></select>
+      </label>
+      <label class="who">You are
+        <select id="meSel" style="width:auto"></select>
+      </label>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-pane="picks" aria-selected="true">Picks</button>
+      <button class="tab" role="tab" data-pane="scores" aria-selected="false">Scores</button>
+      <button class="tab" role="tab" data-pane="standings" aria-selected="false">Standings</button>
+      <button class="tab" role="tab" data-pane="lines" aria-selected="false">Lines</button>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="pane-picks"></section>
+    <section id="pane-scores" hidden></section>
+    <section id="pane-standings" hidden></section>
+    <section id="pane-lines" hidden></section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-firestore-compat.min.js"></script>
+<script>
+/* Firebase web config. These are PUBLIC identifiers, not secrets — Google
+   documents them as safe to commit. What actually protects the data is
+   firestore.rules in this repo, plus the passcode gate. */
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCtUp7DYEjdE5i_Vt9oTqzpmNAgHP32xy8",
+  authDomain: "rizzlers-pickems.firebaseapp.com",
+  projectId: "rizzlers-pickems",
+  storageBucket: "rizzlers-pickems.firebasestorage.app",
+  messagingSenderId: "401907218298",
+  appId: "1:401907218298:web:795ef076067ee1926b88c3"
+};
+</script>
+<script>
+);
+const NUM_FRAC_RE = /^(\d{1,2})\s+(\d)\/(\d)$/;   // "5 1/2" as a single token
 const FRAC_RE = /^(\d)\/(\d)$/;
-const PK_RE = /^(pk|pick|pick'?em|even)$/i;
+const PK_RE = /^(pk|pick|pick'?em|even|ev)$/i;
 
 function isNumberish(s) {
   const t = (s || "").trim();
-  return NUM_RE.test(t) || FRAC_RE.test(t) || PK_RE.test(t);
+  return NUM_RE.test(t) || VULGAR_ONLY_RE.test(t) || NUM_FRAC_RE.test(t)
+      || FRAC_RE.test(t) || PK_RE.test(t);
 }
 
 function tokenValue(s) {
   const t = (s || "").trim();
   if (PK_RE.test(t)) return 0;
+  const nf = t.match(NUM_FRAC_RE);
+  if (nf) return Number(nf[1]) + Number(nf[2]) / Number(nf[3]);
   const f = t.match(FRAC_RE);
   if (f) return Number(f[1]) / Number(f[2]);
+  if (VULGAR_ONLY_RE.test(t)) return VULGAR[t];
+  const last = t.slice(-1);
+  if (VULGAR[last]) return Number(t.slice(0, -1) || 0) + VULGAR[last];
   return Number(t);
 }
 
@@ -360,41 +803,64 @@ function parseWords(words, pageWidth) {
   }
 
   // --- candidate spread tokens and matchup cells ---
-  const mid = pageWidth / 2;
-  const colOf = (x) => (x < mid ? 0 : 1);
-
-  const spreadCells = [];
   const gameCells = [];
+  const skipRow = new Set();
   for (const r of rows) {
+    const rowText = r.items.map((i) => i.str).join(" ");
+    // rows that are structure, not game data — their numbers are not spreads
+    if (/teams?\s+on\s+bye/i.test(rowText) || /^\s*name\b/i.test(rowText.trim())
+        || /\bweek\s+\d{1,2}\b/i.test(rowText)) {
+      skipRow.add(r);
+      continue;
+    }
+    let isDay = false;
     for (const c of splitCells(r)) {
-      if (/teams?\s+on\s+bye/i.test(c.text)) continue;
+      const t = c.text.replace(/[^A-Za-z]/g, "").toLowerCase();
+      if (DAYS.includes(t)) isDay = true;
       const teams = splitTeams(c.text);
-      if (teams) {
-        gameCells.push({ cell: c, teams, y: r.y, col: colOf((c.x0 + c.x1) / 2) });
-        continue;
-      }
-      // a cell that is only number-ish tokens is a spread
-      const toks = c.items.filter((i) => i.str.trim());
-      if (toks.length && toks.every((i) => isNumberish(i.str))) {
-        const value = toks.reduce((s, i) => s + tokenValue(i.str), 0);
-        spreadCells.push({
-          value,
-          x: toks[0].x + (toks[toks.length - 1].x + toks[toks.length - 1].w - toks[0].x) / 2,
-          y: r.y,
-          col: colOf(toks[0].x),
-          used: false,
-        });
+      if (teams) gameCells.push({ cell: c, teams, y: r.y });
+    }
+    if (isDay && !gameCells.some((g) => g.y === r.y)) skipRow.add(r);
+  }
+  const matchupRows = new Set(gameCells.map((g) => g.y));
+
+  // Collect spread candidates from INDIVIDUAL number-ish words rather than
+  // requiring a whole cell to be numeric — a spread printed next to a note
+  // ("London 8:30 AM") lands in the same cell and used to be discarded outright,
+  // which is what made games report no spread when the sheet plainly had one.
+  const spreads = [];
+  for (const r of rows) {
+    if (skipRow.has(r) || matchupRows.has(r.y)) continue;
+    const nums = r.items.filter((i) => isNumberish(i.str));
+    let group = null;
+    for (const it of nums) {
+      if (group && it.x - group.x1 <= 18) {
+        group.parts.push(it);
+        group.x1 = it.x + it.w;
+      } else {
+        group = { parts: [it], x0: it.x, x1: it.x + it.w, y: r.y };
+        spreads.push(group);
       }
     }
   }
+  for (const s of spreads) {
+    s.value = s.parts.reduce((sum, i) => sum + tokenValue(i.str), 0);
+    s.x = (s.x0 + s.x1) / 2;
+    s.used = false;
+  }
 
-  // --- pair each matchup with the nearest spread ABOVE it in the same column ---
+  // --- pair each matchup with the nearest spread ABOVE it, in its own box ---
+  // Matching by which half of the page a token sits in was too crude: a box that
+  // straddles the midpoint put the spread and its matchup in different "columns"
+  // and they never paired. Overlap against the actual matchup's x-range instead.
   const games = [];
   gameCells.sort((a, b) => b.y - a.y || a.cell.x0 - b.cell.x0);
   for (const g of gameCells) {
     const bx = boundaryX(g.cell);
-    const cands = spreadCells
-      .filter((s) => !s.used && s.col === g.col && s.y > g.y && s.y - g.y < 70)
+    const pad = 24;
+    const cands = spreads
+      .filter((s) => !s.used && s.y > g.y && s.y - g.y < 90
+                     && s.x >= g.cell.x0 - pad && s.x <= g.cell.x1 + pad)
       .sort((a, b) => (a.y - g.y) - (b.y - g.y));
     const s = cands[0];
     let spread = null, favored = null;
@@ -933,7 +1399,19 @@ if (typeof window !== "undefined") window.PickemParser = API;
         '<span class="muted">' + d.games.length + " games</span></div>";
       if (d.warnings && d.warnings.length) {
         h += '<div class="warn"><b>Check these before saving:</b><ul>' +
-          d.warnings.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>";
+          d.warnings.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" +
+          "<p style=\"margin:.5rem 0 0\">Fill anything missing in by hand below — " +
+          "nothing is saved until you hit save.</p></div>";
+      }
+      if (d.debug) {
+        h += '<details style="margin:.6rem 0"><summary class="muted" style="cursor:pointer">' +
+          "Show what the PDF actually contained</summary>" +
+          '<textarea readonly id="dbg" style="width:100%;height:190px;margin-top:.5rem;' +
+          'font-family:var(--mono);font-size:.72rem;background:var(--panel-2);' +
+          'color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:.6rem">' +
+          esc(d.debug) + "</textarea>" +
+          '<p class="muted" style="margin:.4rem 0 0">Each line is x,y then the text. ' +
+          "Copy this if a spread is still being missed.</p></details>";
       }
       h += '<div class="edithead"><span>Day</span><span>Away</span><span>Home</span>' +
         "<span>Spread</span><span>Favored</span><span></span></div>";
@@ -1085,6 +1563,11 @@ if (typeof window !== "undefined") window.PickemParser = API;
         });
       }
       var out = P.parseWords(words, pageWidth);
+      // Keep what the PDF actually contained. If a spread still goes missing,
+      // this is the only way to see why without having the file to hand.
+      out.debug = words.map(function (x) {
+        return Math.round(x.x) + "," + Math.round(x.y) + "  " + x.str;
+      }).join("\n");
       if (!out.games.length) {
         state.draft = { week: null, games: [], byes: out.byes, warnings: out.warnings };
         addRow();

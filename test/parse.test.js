@@ -170,3 +170,107 @@ test("tally counts pushes separately from wins and losses", () => {
   const rec = P.tally(games, (g) => side[g.id], (g) => res[g.id]);
   assert.deepStrictEqual(rec, { w: 1, l: 1, p: 1 });   // 'd' ungraded, excluded
 });
+
+/* --------------------------------------------------------------------------
+ * Regressions from the first real weekly PDF, which reported "no spread" on
+ * games that plainly had one. Each of these produced that symptom.
+ * -------------------------------------------------------------------------- */
+
+test("reads a spread written with a vulgar fraction glyph", () => {
+  // Real sheets print "5½", not "5 1/2" as two tokens.
+  const w = [
+    { str: "Week 4", x: 270, y: 720, w: 60 },
+    { str: "Sunday", x: 40, y: 690, w: 50 },
+    { str: "5½", x: 160, y: 620, w: 16 },
+    { str: "Pittsburgh", x: 40, y: 600, w: 74 },
+    { str: "at", x: 132, y: 600, w: 12 },
+    { str: "Cincinnati", x: 160, y: 600, w: 74 },
+  ];
+  const { games, warnings } = P.parseWords(w, PAGE_W);
+  assert.strictEqual(games[0].spread, 5.5);
+  assert.strictEqual(games[0].favored, "home");
+  assert.deepStrictEqual(warnings, []);
+});
+
+test("bare fraction glyph alone is a valid spread", () => {
+  const w = [
+    { str: "Week 4", x: 270, y: 720, w: 60 },
+    { str: "Sunday", x: 40, y: 690, w: 50 },
+    { str: "½", x: 60, y: 620, w: 8 },
+    { str: "Buffalo", x: 40, y: 600, w: 74 },
+    { str: "at", x: 132, y: 600, w: 12 },
+    { str: "Miami", x: 160, y: 600, w: 74 },
+  ];
+  assert.strictEqual(P.parseWords(w, PAGE_W).games[0].spread, 0.5);
+});
+
+test("a spread sharing its row with a note is still found", () => {
+  // "London 8:30 AM" sits beside the number; requiring the whole cell to be
+  // numeric threw the spread away and reported the game as having none.
+  const w = [
+    { str: "Week 7", x: 270, y: 720, w: 60 },
+    { str: "Sunday", x: 40, y: 690, w: 50 },
+    { str: "London", x: 40, y: 622, w: 40 },
+    { str: "8:30", x: 84, y: 622, w: 24 },
+    { str: "AM", x: 112, y: 622, w: 18 },
+    { str: "3", x: 70, y: 600, w: 8 },
+    { str: "LA Rams", x: 40, y: 580, w: 74 },
+    { str: "at", x: 132, y: 580, w: 12 },
+    { str: "Jacksonville", x: 160, y: 580, w: 74 },
+  ];
+  const { games, warnings } = P.parseWords(w, PAGE_W);
+  assert.strictEqual(games[0].spread, 3);
+  assert.strictEqual(games[0].favored, "away");
+  assert.deepStrictEqual(warnings, []);
+});
+
+test("a box straddling the page midpoint still pairs", () => {
+  // Page-half bucketing put the spread and its matchup in different columns.
+  const w = [
+    { str: "Week 5", x: 270, y: 720, w: 60 },
+    { str: "Sunday", x: 40, y: 690, w: 50 },
+    { str: "6", x: 300, y: 620, w: 8 },
+    { str: "Denver", x: 270, y: 600, w: 60 },
+    { str: "at", x: 340, y: 600, w: 12 },
+    { str: "Kansas City", x: 364, y: 600, w: 74 },
+  ];
+  const { games } = P.parseWords(w, PAGE_W);
+  assert.strictEqual(games[0].spread, 6);
+  assert.strictEqual(games[0].favored, "away");
+});
+
+test("the week number is never mistaken for a spread", () => {
+  const w = [
+    { str: "Week", x: 260, y: 660, w: 40 },
+    { str: "12", x: 304, y: 660, w: 18 },
+    { str: "Sunday", x: 40, y: 640, w: 50 },
+    { str: "Buffalo", x: 40, y: 600, w: 74 },
+    { str: "at", x: 132, y: 600, w: 12 },
+    { str: "Miami", x: 160, y: 600, w: 74 },
+  ];
+  const r = P.parseWords(w, PAGE_W);
+  assert.strictEqual(r.week, 12);
+  assert.strictEqual(r.games[0].spread, null, "week 12 must not become a spread");
+});
+
+test("two games side by side keep their own spreads", () => {
+  const w = [
+    { str: "Week 3", x: 270, y: 720, w: 60 },
+    { str: "Sunday", x: 40, y: 690, w: 50 },
+    { str: "3", x: 70, y: 620, w: 8 },
+    { str: "10", x: 360, y: 620, w: 14 },
+    { str: "Dallas", x: 40, y: 600, w: 60 },
+    { str: "at", x: 110, y: 600, w: 12 },
+    { str: "NY Giants", x: 134, y: 600, w: 70 },
+    { str: "Green Bay", x: 330, y: 600, w: 70 },
+    { str: "at", x: 410, y: 600, w: 12 },
+    { str: "Chicago", x: 434, y: 600, w: 60 },
+  ];
+  const { games } = P.parseWords(w, PAGE_W);
+  const dal = games.find((g) => g.away === "Dallas");
+  const gb = games.find((g) => g.away === "Green Bay");
+  assert.strictEqual(dal.spread, 3);
+  assert.strictEqual(dal.favored, "away");
+  assert.strictEqual(gb.spread, 10);
+  assert.strictEqual(gb.favored, "away");
+});
