@@ -10,38 +10,36 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Rizzlers Pick'ems — a members' club, not a sports template: cream on card-table
-   felt, monospaced figures, hairlines instead of boxes. One accent, spent
+/* Rizzlers Pick'ems — a trading terminal, not a sports template: steel blue on
+   graphite, monospaced figures, hairlines instead of boxes. One accent, spent
    sparingly; green and red mean results and nothing else. */
 :root{
-  /* felt greens — the ground is a hue, not a grey */
-  --ink:#081310;
-  --ink-2:#0a1713;
-  --slate:#0e1e18;
-  --slate-2:#12251d;
-  --slate-3:#182e24;
+  /* graphite with a cool bias — a chosen neutral, not a default grey */
+  --ink:#0a0c0f;
+  --ink-2:#0d1015;
+  --slate:#12161c;
+  --slate-2:#171c24;
+  --slate-3:#1d232c;
 
-  /* hairlines carry the accent's warmth so edges read as brass on felt */
-  --hair:rgba(236,217,171,.09);
-  --hair-strong:rgba(236,217,171,.19);
-  --lift:inset 0 1px 0 rgba(236,217,171,.05);
+  --hair:rgba(255,255,255,.075);
+  --hair-strong:rgba(255,255,255,.15);
+  --lift:inset 0 1px 0 rgba(255,255,255,.05);
 
-  /* text runs slightly cool so the warm cream accent stays distinct from it */
-  --text:#e6ece7;
-  --muted:#93a49a;
-  --dim:#63756b;
+  --text:#e8edf3;
+  --muted:#98a3b2;
+  --dim:#68737f;
 
-  --accent:#ecd9ab;
-  --accent-hi:#f7ead0;
-  --accent-dim:rgba(236,217,171,.11);
-  --accent-line:rgba(236,217,171,.42);
+  /* steel blue: reads as data, and sits furthest in hue from win/loss */
+  --accent:#5aa9f0;
+  --accent-hi:#84c2f7;
+  --accent-dim:rgba(90,169,240,.13);
+  --accent-line:rgba(90,169,240,.45);
 
-  /* mint rather than a mid green — it has to separate from the felt ground */
-  --win:#5fe0a4;
-  --win-dim:rgba(95,224,164,.14);
-  --loss:#f26b74;
-  --loss-dim:rgba(242,107,116,.13);
-  --push:#7f8f86;
+  --win:#3ed49a;
+  --win-dim:rgba(62,212,154,.13);
+  --loss:#f2606a;
+  --loss-dim:rgba(242,96,106,.12);
+  --push:#7c8794;
 
   --r:12px;
   --r-sm:8px;
@@ -58,7 +56,7 @@ body{
   font-size:15px;line-height:1.5;letter-spacing:-.005em;
   -webkit-font-smoothing:antialiased;
   /* one soft brass bloom behind the header, the only ornament on the page */
-  background-image:radial-gradient(120% 55% at 50% -14%,rgba(236,217,171,.07),transparent 62%);
+  background-image:radial-gradient(120% 55% at 50% -14%,rgba(90,169,240,.075),transparent 62%);
   background-attachment:fixed;
 }
 h1,h2,h3,h4{margin:0;font-family:var(--sans);font-weight:600;letter-spacing:-.02em;
@@ -85,10 +83,10 @@ input::placeholder{color:var(--dim)}
 .err{color:var(--loss);font-size:.8rem;margin-top:.8rem;min-height:1.2em}
 
 /* ---------- buttons ---------- */
-.btn{background:linear-gradient(180deg,var(--accent-hi),var(--accent));color:#132019;
+.btn{background:linear-gradient(180deg,var(--accent-hi),var(--accent));color:#06121f;
   border:0;border-radius:var(--r-sm);padding:.6rem 1.05rem;font-weight:600;font-size:.86rem;
   letter-spacing:-.005em;white-space:nowrap;box-shadow:0 1px 0 rgba(255,255,255,.35) inset,
-  0 6px 16px -10px rgba(236,217,171,.55);transition:filter .15s var(--ease),transform .1s var(--ease)}
+  0 6px 16px -10px rgba(90,169,240,.6);transition:filter .15s var(--ease),transform .1s var(--ease)}
 .btn:hover{filter:brightness(1.06)}
 .btn:active{transform:translateY(1px)}
 .btn.ghost{background:var(--slate);color:var(--muted);border:1px solid var(--hair);
@@ -105,7 +103,7 @@ input::placeholder{color:var(--dim)}
 .brand{display:flex;align-items:center;gap:.55rem;font-weight:600;font-size:.95rem;
   letter-spacing:-.02em}
 .brand::before{content:"R";width:22px;height:22px;border-radius:6px;flex:none;
-  background:linear-gradient(180deg,var(--accent-hi),var(--accent));color:#132019;
+  background:linear-gradient(180deg,var(--accent-hi),var(--accent));color:#06121f;
   display:grid;place-items:center;font-size:.78rem;font-weight:700;letter-spacing:0}
 .brand span{color:var(--accent)}
 .spacer{margin-left:auto}
@@ -158,12 +156,12 @@ input::placeholder{color:var(--dim)}
   display:grid;place-items:center;background:var(--slate-3);color:var(--dim);
   border:1px solid var(--hair)}
 .dot.a{background:var(--accent-dim);border-color:var(--accent-line);color:var(--accent)}
-.dot.h{background:rgba(122,178,214,.14);border-color:rgba(122,178,214,.4);color:#95c4e2}
+.dot.h{background:rgba(196,160,232,.14);border-color:rgba(196,160,232,.42);color:#c9a6ee}
 .chip{font-size:.63rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
   padding:.2rem .45rem;border-radius:5px;background:var(--slate-3);color:var(--muted);
   border:1px solid var(--hair)}
-.chip.win{color:var(--win);border-color:rgba(95,224,164,.35);background:var(--win-dim)}
-.chip.loss{color:var(--loss);border-color:rgba(242,107,116,.35);background:var(--loss-dim)}
+.chip.win{color:var(--win);border-color:rgba(62,212,154,.35);background:var(--win-dim)}
+.chip.loss{color:var(--loss);border-color:rgba(242,96,106,.35);background:var(--loss-dim)}
 .chip.push{color:var(--push);border-color:var(--hair)}
 .final{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.76rem;
   color:var(--dim)}
@@ -207,7 +205,7 @@ input::placeholder{color:var(--dim)}
 .sd.grp .nm{color:var(--text);font-weight:600}
 .sd.cov{background:var(--win-dim)}
 .sd.cov .nm{color:var(--win)}
-.sd.psh{background:rgba(127,143,134,.08)}
+.sd.psh{background:rgba(124,135,148,.08)}
 .ini span{width:16px;height:16px;border-radius:50%;font-size:.55rem;font-weight:700;
   display:grid;place-items:center;background:transparent;color:transparent;
   border:1px solid var(--hair)}
@@ -253,11 +251,11 @@ input::placeholder{color:var(--dim)}
 .cv .nm{font-weight:500;font-size:.88rem}
 .cv .sp{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.76rem;
   color:var(--muted)}
-.cv[aria-pressed="true"]{background:var(--win-dim);border-color:rgba(95,224,164,.45)}
+.cv[aria-pressed="true"]{background:var(--win-dim);border-color:rgba(62,212,154,.45)}
 .cv[aria-pressed="true"] .nm{color:var(--win);font-weight:600}
 .cv.push{min-width:62px;justify-content:center;font-size:.68rem;letter-spacing:.09em;
   text-transform:uppercase;color:var(--dim);font-weight:600}
-.cv.push[aria-pressed="true"]{background:rgba(127,143,134,.16);border-color:var(--push);
+.cv.push[aria-pressed="true"]{background:rgba(124,135,148,.16);border-color:var(--push);
   color:var(--push)}
 .gline{display:flex;align-items:baseline;gap:.6rem;margin:1.1rem 0 .35rem}
 .gline .t{font-weight:500;font-size:.85rem;color:var(--text)}
@@ -708,7 +706,7 @@ window.FIREBASE_CONFIG = {
 
     h += '<div class="hm-legend">Initials show who took each side \u2014 ' +
       PEOPLE.map(function (p) { return "<b>" + esc(p[0]) + "</b> " + esc(p); }).join(", ") +
-      ". Cream edge marks the group's pick; green is the side that covered.</div>";
+      ". Blue edge marks the group's pick; green is the side that covered.</div>";
 
     var day = null;
     gs.forEach(function (g) {

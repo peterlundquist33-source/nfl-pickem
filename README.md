@@ -59,13 +59,13 @@ confirms it.
 
 ## Design
 
-Cream on card-table felt — a members' club rather than a sports template. Three
+Steel blue on graphite — a trading terminal rather than a sports template. Three
 rules hold it together:
 
-- **One accent, spent sparingly.** Cream (`#ecd9ab`) marks only what needs marking
-  — the active tab, the group's pick, the primary button. Green and red are
-  semantic and mean results, nothing else. Body text runs slightly cool
-  (`#e6ece7`) so the warm accent stays distinct from ordinary copy.
+- **One accent, spent sparingly.** Steel blue (`#5aa9f0`) marks only what needs
+  marking — the active tab, the group's pick, the primary button. Green and red
+  are semantic and mean results, nothing else; blue sits furthest in hue from
+  both, so an accent is never mistaken for an outcome.
 - **Hairlines, not boxes.** Related rows share one panel separated by 1px
   hairlines. A border per element is what made it read as a template.
 - **Monospaced figures throughout.** Every spread, score and record is IBM Plex
