@@ -1,4 +1,4 @@
-# Cover Three
+# Rizzlers Pick'ems
 
 Season-long NFL pick'em against the spread for three people — Peter, Dalton and
 Hunter. Built to `spec/NFL_Pickems_Tracker_Spec.pdf`.

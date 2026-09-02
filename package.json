@@ -2,7 +2,7 @@
   "name": "nfl-pickem-tracker",
   "version": "1.0.0",
   "private": true,
-  "description": "Season-long NFL pick'em against the spread for three people.",
+  "description": "Rizzlers Pick'ems — season-long NFL pick'em against the spread for three people.",
   "scripts": {
     "build": "node build.mjs",
     "test": "node --test test/parse.test.js"

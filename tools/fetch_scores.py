@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print a week's NFL final scores, ready to type into Cover Three.
+"""Print a week's NFL final scores, ready to type into Rizzlers Pick'ems.
 
 Why this exists: the published app runs inside the claude.ai artifact sandbox,
 whose CSP blocks outbound fetch/XHR entirely. The page therefore cannot pull
@@ -24,7 +24,7 @@ URL = ("https://cdn.espn.com/core/nfl/scoreboard"
 def games(season, week):
     req = urllib.request.Request(
         URL.format(week=week, season=season),
-        headers={"User-Agent": "Mozilla/5.0 (cover-three)"},
+        headers={"User-Agent": "Mozilla/5.0 (rizzlers-pickems)"},
     )
     with urllib.request.urlopen(req, timeout=30) as r:
         data = json.load(r)
