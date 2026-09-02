@@ -57,6 +57,24 @@ matchup it records a warning and leaves the field blank rather than guessing.
 Every parse lands in an editable review table and nothing is saved until a human
 confirms it.
 
+## Design
+
+Brass on a blue-biased near-black, in the register of a trading terminal rather
+than a sports template. Three rules hold it together:
+
+- **One accent, spent sparingly.** Brass (`#e0a144`, deliberately desaturated from
+  a neon amber) marks only what needs marking — the active tab, the group's pick,
+  the primary button. Green and red are semantic and mean results, nothing else.
+- **Hairlines, not boxes.** Related rows share one panel separated by 1px
+  hairlines. A border per element is what made it read as a template.
+- **Monospaced figures throughout.** Every spread, score and record is IBM Plex
+  Mono with tabular numerals, so columns of numbers line up — that alignment is
+  most of the "paid product" feel.
+
+Type is Instrument Sans for UI and IBM Plex Mono for all data. Tokens live at the
+top of the `<style>` block in `src/index.html`; the palette can be reskinned from
+`:root` alone.
+
 ## The Home tab
 
 Opens on the most recently uploaded week and acts as the hub. One row per game,
