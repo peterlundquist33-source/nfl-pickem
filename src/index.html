@@ -152,11 +152,12 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .mark.p{color:var(--push);background:var(--panel-2)}
 
 /* ---------- share box ---------- */
-.hm-share{margin-top:2.2rem;border-top:1px solid var(--line);padding-top:1.2rem}
+.hm-share{margin-top:1.1rem;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:.9rem 1rem 1rem}
 .hm-share h3{font-family:var(--cond);font-size:.78rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--muted)}
 .hm-share .row{margin-top:.6rem}
-.hm-share textarea{width:100%;min-height:150px;resize:vertical;
+.hm-share textarea{width:100%;min-height:120px;resize:vertical;
   font-family:var(--mono);font-size:.82rem;line-height:1.6;
   background:var(--panel-2);color:var(--text);border:1px solid var(--line);
   border-radius:8px;padding:.7rem .8rem}
@@ -586,6 +587,27 @@ window.FIREBASE_CONFIG = {
         '<button class="btn ghost" data-go="standings">Standings</button>' +
       "</div></div>";
 
+    // --- the message for the commissioner ---
+    var undecided = [];
+    var lines = gs.map(function (g) {
+      var m = P.majority(votesFor(w, g.id), PEOPLE);
+      if (!m) { undecided.push(g); return "TBD (" + g.away + " at " + g.home + ")"; }
+      return m === "away" ? g.away : g.home;
+    });
+    var msg = "Hi " + COMMISSIONER + ", here are our picks for week " + w + ".\n\n"
+            + lines.join("\n");
+
+    h += '<div class="hm-share"><h3>Send to ' + esc(COMMISSIONER) + "</h3>" +
+      (undecided.length
+        ? '<p class="pending">' + undecided.length + " game" +
+          (undecided.length > 1 ? "s" : "") + " still waiting on all three picks \u2014 " +
+          "those show as TBD in the message.</p>"
+        : "") +
+      '<div class="row"><textarea id="shareBox" readonly>' + esc(msg) + "</textarea></div>" +
+      '<div class="row"><button class="btn" id="copyMsg">Copy message</button></div>' +
+      '<p class="hint">Copy this and send it on. It lists the group\u2019s majority ' +
+      "pick for each game.</p></div>";
+
     // this week's records, once anything is graded
     if (graded) {
       var grp = P.tally(gs, function (g) { return P.majority(votesFor(w, g.id), PEOPLE); },
@@ -640,28 +662,6 @@ window.FIREBASE_CONFIG = {
 
       h += "</div></article>";
     });
-
-    // --- the message for the commissioner ---
-    var undecided = [];
-    var lines = gs.map(function (g) {
-      var m = P.majority(votesFor(w, g.id), PEOPLE);
-      if (!m) { undecided.push(g); return "TBD (" + g.away + " at " + g.home + ")"; }
-      return m === "away" ? g.away : g.home;
-    });
-    var msg = "Hi " + COMMISSIONER + ", here are our picks for week " + w + ".\n\n"
-            + lines.join("\n");
-
-    h += '<div class="hm-share"><h3>Send to ' + esc(COMMISSIONER) + "</h3>" +
-      (undecided.length
-        ? '<p class="pending">' + undecided.length + " game" +
-          (undecided.length > 1 ? "s" : "") + " still waiting on all three picks \u2014 " +
-          "those show as TBD below.</p>"
-        : "") +
-      '<div class="row"><textarea id="shareBox" readonly>' + esc(msg) + "</textarea></div>" +
-      '<div class="row"><button class="btn" id="copyMsg">Copy message</button></div>' +
-      '<p class="hint">Copy this and send it on. It lists the group\u2019s majority ' +
-      "pick for each game.</p></div>";
-
     h += statusLine();
     el.innerHTML = h;
     wireWeekStrip(el);
