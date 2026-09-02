@@ -59,12 +59,13 @@ confirms it.
 
 ## Design
 
-Brass on a blue-biased near-black, in the register of a trading terminal rather
-than a sports template. Three rules hold it together:
+Cream on card-table felt — a members' club rather than a sports template. Three
+rules hold it together:
 
-- **One accent, spent sparingly.** Brass (`#e0a144`, deliberately desaturated from
-  a neon amber) marks only what needs marking — the active tab, the group's pick,
-  the primary button. Green and red are semantic and mean results, nothing else.
+- **One accent, spent sparingly.** Cream (`#ecd9ab`) marks only what needs marking
+  — the active tab, the group's pick, the primary button. Green and red are
+  semantic and mean results, nothing else. Body text runs slightly cool
+  (`#e6ece7`) so the warm accent stays distinct from ordinary copy.
 - **Hairlines, not boxes.** Related rows share one panel separated by 1px
   hairlines. A border per element is what made it read as a template.
 - **Monospaced figures throughout.** Every spread, score and record is IBM Plex
@@ -72,8 +73,12 @@ than a sports template. Three rules hold it together:
   most of the "paid product" feel.
 
 Type is Instrument Sans for UI and IBM Plex Mono for all data. Tokens live at the
-top of the `<style>` block in `src/index.html`; the palette can be reskinned from
-`:root` alone.
+top of the `<style>` block in `src/index.html`, named by role (`--accent`, not a
+colour name), so the whole site reskins from `:root` alone.
+
+Two constraints on any future palette: green and red are load-bearing (covered /
+didn't cover), so an accent in either hue makes results ambiguous; and the "win"
+green has to separate from the felt ground, which is why it's a bright mint.
 
 ## The Home tab
 
