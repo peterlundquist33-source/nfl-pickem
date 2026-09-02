@@ -57,7 +57,21 @@ matchup it records a warning and leaves the field blank rather than guessing.
 Every parse lands in an editable review table and nothing is saved until a human
 confirms it.
 
-## Scores
+## Grading a week
+
+Click whichever team **covered the spread** — one click per game, no typing. The
+spread is printed on each button, and there's a Push option for the whole-number
+lines that can land exactly. That result is what grades the week.
+
+Exact final scores are still available under "Add exact scores", collapsed,
+because they're worth recording and they show on the picks page. Typing a full
+score settles that game's result too, if one isn't already set. Weeks graded the
+old way keep working: a clicked result wins, a score-derived one is the fallback.
+
+Weeks appear as buttons on the Picks, Scores and Lines tabs, each showing its
+state (picks in, games graded), so moving between them is one click.
+
+## Scores from ESPN
 
 The app **cannot fetch scores itself**. It runs in a sandbox whose CSP blocks all
 outbound requests, so finals are typed in — the fallback the spec allows. Grading

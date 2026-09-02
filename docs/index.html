@@ -111,6 +111,35 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .chip.push{color:var(--push);border-color:var(--push)}
 .final{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
 
+/* ---------- week strip ---------- */
+.weeks{display:flex;flex-wrap:wrap;gap:.4rem;padding:1.1rem 0 .2rem}
+.wk{font-family:var(--cond);font-weight:700;font-size:.82rem;letter-spacing:.06em;
+  text-transform:uppercase;padding:.45rem .85rem;border-radius:8px;
+  background:var(--panel);color:var(--muted);border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;line-height:1.15;min-width:72px}
+.wk:hover{border-color:var(--dim);color:var(--text)}
+.wk[aria-pressed="true"]{background:var(--amber-dim);border-color:var(--amber);color:var(--amber)}
+.wk small{font-family:var(--sans);font-size:.6rem;letter-spacing:.02em;
+  text-transform:none;font-weight:500;opacity:.75;margin-top:.1rem}
+.wk.done small{color:var(--win);opacity:1}
+
+/* ---------- score grading ---------- */
+.cover{display:grid;grid-template-columns:1fr 1fr auto;gap:.4rem;align-items:stretch}
+.cv{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+  padding:.55rem .7rem;text-align:left;transition:border-color .12s,background .12s}
+.cv:hover{border-color:var(--dim)}
+.cv .nm{font-weight:600;font-size:.9rem}
+.cv .sp{font-family:var(--mono);font-size:.78rem;color:var(--amber);font-weight:600}
+.cv[aria-pressed="true"]{background:rgba(62,207,142,.14);border-color:var(--win)}
+.cv[aria-pressed="true"] .nm{color:var(--win)}
+.cv.push{min-width:58px;justify-content:center;font-family:var(--cond);font-weight:700;
+  font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.cv.push[aria-pressed="true"]{background:var(--panel-2);border-color:var(--push);color:var(--push)}
+.gline{display:flex;align-items:baseline;gap:.5rem;margin:.9rem 0 .3rem}
+.gline .t{font-weight:600;font-size:.84rem;color:var(--muted)}
+.gline .r{margin-left:auto;font-size:.72rem;color:var(--dim)}
+
 /* ---------- standings ---------- */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
@@ -180,9 +209,6 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
     <div class="top-in">
       <div class="brand">Rizzlers <span>Pick&#39;ems</span></div>
       <div class="spacer"></div>
-      <label class="who">Week
-        <select id="weekSel" style="width:auto"></select>
-      </label>
       <label class="who">You are
         <select id="meSel" style="width:auto"></select>
       </label>
@@ -624,6 +650,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
     weeks: {},                   // week -> {games, byes}
     picks: {},                   // week -> {person -> {gameId: side}}
     scores: {},                  // week -> {gameId: {awayScore, homeScore}}
+    results: {},                 // week -> {gameId: "away"|"home"|"push"}
     draft: null,                 // parsed-but-unsaved lines
     tab: "picks",
     confirmDelete: null,
@@ -690,9 +717,12 @@ if (typeof window !== "undefined") window.PickemParser = API;
       render();
     }, function () {});
     db.collection("scores").onSnapshot(function (snap) {
-      state.scores = {};
+      state.scores = {}; state.results = {};
       snap.docs.forEach(function (d) {
-        var v = d.data(); if (v) state.scores[v.week] = v.finals || {};
+        var v = d.data();
+        if (!v) return;
+        state.scores[v.week] = v.finals || {};
+        state.results[v.week] = v.results || {};
       });
       render();
     }, function () {});
@@ -743,6 +773,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
     delete state.weeks[week];
     delete state.picks[week];
     delete state.scores[week];
+    delete state.results[week];
     if (state.week === week) state.week = latestWeek();
     state.confirmDelete = null;
     buildChrome();
@@ -770,8 +801,13 @@ if (typeof window !== "undefined") window.PickemParser = API;
         var s = finals[k];
         if (s && (s.awayScore !== "" || s.homeScore !== "")) clean[k] = s;
       });
-      return db.doc("scores/" + week).set({ week: week, finals: clean })
-        .catch(function () { note("Couldn't save that score \u2014 check your connection."); });
+      var res = state.results[week] || {};
+      var rclean = {};
+      Object.keys(res).forEach(function (k) { if (res[k]) rclean[k] = res[k]; });
+      // `finals` is still written (possibly empty) because the security rules
+      // require it; exact scores are now optional, the result is what grades.
+      return db.doc("scores/" + week).set({ week: week, finals: clean, results: rclean })
+        .catch(function () { note("Couldn't save that \u2014 check your connection."); });
     });
   }
 
@@ -779,23 +815,12 @@ if (typeof window !== "undefined") window.PickemParser = API;
 
   /* ------------------------------------------------ chrome */
   function buildChrome() {
-    var ws = document.getElementById("weekSel");
-    var keys = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
-    ws.innerHTML = keys.length
-      ? keys.map(function (w) { return '<option value="' + w + '">Week ' + w + "</option>"; }).join("")
-      : '<option value="">\u2014</option>';
-    if (state.week != null) ws.value = String(state.week);
-
     var ms = document.getElementById("meSel");
     ms.innerHTML = '<option value="">choose\u2026</option>' +
       PEOPLE.map(function (p) { return '<option value="' + p + '">' + p + "</option>"; }).join("");
     ms.value = state.me;
   }
 
-  document.getElementById("weekSel").addEventListener("change", function (e) {
-    state.week = e.target.value ? Number(e.target.value) : null;
-    state.confirmDelete = null; render();
-  });
   document.getElementById("meSel").addEventListener("change", function (e) {
     state.me = e.target.value; localStorage.setItem("c3.me", state.me); render();
   });
@@ -827,7 +852,12 @@ if (typeof window !== "undefined") window.PickemParser = API;
     PEOPLE.forEach(function (p) { var v = pickOf(w, p, gid); if (v) o[p] = v; });
     return o;
   }
-  function resultOf(w, g) { return P.atsWinner(g, scoresFor(w)[g.id]); }
+  function resultsFor(w) { return state.results[w] || {}; }
+  // A clicked result is the source of truth; exact scores are a fallback so
+  // weeks graded the old way (by typing finals) keep working.
+  function resultOf(w, g) {
+    return resultsFor(w)[g.id] || P.atsWinner(g, scoresFor(w)[g.id]);
+  }
   function spreadLabel(g, side) {
     if (g.spread == null || !g.favored) return "";
     if (g.favored !== side) return "+" + fmt(g.spread);
@@ -852,19 +882,26 @@ if (typeof window !== "undefined") window.PickemParser = API;
   function renderPicks() {
     var el = document.getElementById("pane-picks");
     var w = state.week, gs = gamesFor(w);
-    if (!gs.length) {
+    var strip = weekStrip("picks");
+    if (!Object.keys(state.weeks).length) {
       el.innerHTML = empty("No lines yet",
         "Upload this week's spreads PDF on the Lines tab to get started.");
       return;
     }
     if (!state.me) {
-      el.innerHTML = empty("Who are you?",
+      el.innerHTML = strip + empty("Who are you?",
         "Pick your name up top so your picks are saved as yours.");
+      wireWeekStrip(el);
+      return;
+    }
+    if (!gs.length) {
+      el.innerHTML = strip + empty("Pick a week", "Choose a week above to make your picks.");
+      wireWeekStrip(el);
       return;
     }
     var byes = (state.weeks[w] || {}).byes || [];
     var made = gs.filter(function (g) { return pickOf(w, state.me, g.id); }).length;
-    var h = '<div class="head"><div><h2>Week ' + w + " Picks</h2>" +
+    var h = strip + '<div class="head"><div><h2>Week ' + w + " Picks</h2>" +
       '<p>' + made + " of " + gs.length + " in for " + esc(state.me) +
       (byes.length ? " &middot; bye: " + esc(byes.join(", ")) : "") + "</p></div></div>";
 
@@ -876,6 +913,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
     });
     h += "</div>" + statusLine();
     el.innerHTML = h;
+    wireWeekStrip(el);
 
     Array.prototype.forEach.call(el.querySelectorAll(".side"), function (b) {
       b.addEventListener("click", function () {
@@ -942,29 +980,82 @@ if (typeof window !== "undefined") window.PickemParser = API;
   function renderScores() {
     var el = document.getElementById("pane-scores");
     var w = state.week, gs = gamesFor(w);
-    if (!gs.length) { el.innerHTML = empty("No lines yet", "Upload a PDF on the Lines tab."); return; }
-    var sc = scoresFor(w);
-    var h = '<div class="head"><div><h2>Week ' + w + " Final Scores</h2>" +
-      "<p>Type finals and everything grades itself. Blank rows stay ungraded.</p></div></div>";
-    h += '<div class="tablewrap"><table><thead><tr><th>Game</th><th>Away</th><th>Home</th>' +
-      "<th>ATS result</th></tr></thead><tbody>";
+    var h = weekStrip("scores");
+    if (!Object.keys(state.weeks).length) {
+      el.innerHTML = empty("No lines yet", "Upload a PDF on the Lines tab.");
+      return;
+    }
+    if (!gs.length) {
+      el.innerHTML = h + empty("Pick a week", "Choose a week above to grade it.");
+      wireWeekStrip(el);
+      return;
+    }
+
+    var graded = gs.filter(function (g) { return resultOf(w, g); }).length;
+    h += '<div class="head"><div><h2>Week ' + w + " Results</h2>" +
+      "<p>Click whichever team covered the spread. " + graded + " of " + gs.length +
+      " graded.</p></div></div>";
+
+    var day = null;
     gs.forEach(function (g) {
-      var s = sc[g.id] || {};
-      var r = P.atsWinner(g, s);
-      var lab = r === "push" ? '<span class="chip push">Push</span>'
-        : r ? '<span class="chip win">' + esc(r === "away" ? g.away : g.home) + " covers</span>"
-        : '<span class="chip">\u2014</span>';
-      h += "<tr><td>" + esc(g.away) + " at " + esc(g.home) +
-        '<br><span class="muted num">' + (g.favored ? esc(g.favored === "away" ? g.away : g.home) +
-          " \u2212" + fmt(g.spread) : "no line") + "</span></td>" +
-        '<td><input class="num sc" data-gid="' + esc(g.id) + '" data-k="awayScore" inputmode="numeric" ' +
-          'style="width:70px" value="' + esc(s.awayScore == null ? "" : s.awayScore) + '"></td>' +
-        '<td><input class="num sc" data-gid="' + esc(g.id) + '" data-k="homeScore" inputmode="numeric" ' +
-          'style="width:70px" value="' + esc(s.homeScore == null ? "" : s.homeScore) + '"></td>' +
-        "<td>" + lab + "</td></tr>";
+      if (g.day && g.day !== day) { day = g.day; h += '<div class="daymark">' + esc(day) + "</div>"; }
+      var r = resultOf(w, g);
+      var sc = scoresFor(w)[g.id];
+      var line = g.favored
+        ? esc(g.favored === "away" ? g.away : g.home) + " \u2212" + fmt(g.spread)
+        : "no line";
+      h += '<div class="gline"><span class="t">' + esc(g.away) + " at " + esc(g.home) +
+        "</span>" + '<span class="muted num" style="font-size:.75rem">' + line + "</span>" +
+        (sc && sc.awayScore !== "" && sc.homeScore !== ""
+          ? '<span class="r num">' + esc(sc.awayScore) + "\u2013" + esc(sc.homeScore) + "</span>"
+          : '<span class="r"></span>') + "</div>";
+
+      function cv(which, name) {
+        return '<button class="cv" data-gid="' + esc(g.id) + '" data-res="' + which +
+          '" aria-pressed="' + (r === which) + '">' +
+          '<span class="nm">' + esc(name) + "</span>" +
+          '<span class="sp">' + spreadLabel(g, which) + "</span></button>";
+      }
+      h += '<div class="cover">' + cv("away", g.away) + cv("home", g.home) +
+        '<button class="cv push" data-gid="' + esc(g.id) + '" data-res="push" aria-pressed="' +
+        (r === "push") + '">Push</button></div>';
     });
-    h += "</tbody></table></div>" + statusLine();
+
+    // Exact scores stay available — they're not needed to grade, but they show
+    // up on the picks page and some weeks are worth recording properly.
+    var sc2 = scoresFor(w);
+    h += '<details style="margin-top:1.6rem"><summary class="muted" style="cursor:pointer">' +
+      "Add exact scores (optional)</summary>" +
+      '<div class="tablewrap" style="margin-top:.6rem"><table><thead><tr><th>Game</th>' +
+      "<th>Away</th><th>Home</th><th>From the scores</th></tr></thead><tbody>";
+    gs.forEach(function (g) {
+      var s0 = sc2[g.id] || {};
+      var fromScore = P.atsWinner(g, s0);
+      h += "<tr><td>" + esc(g.away) + " at " + esc(g.home) + "</td>" +
+        '<td><input class="num sc" data-gid="' + esc(g.id) + '" data-k="awayScore" ' +
+          'inputmode="numeric" style="width:70px" value="' +
+          esc(s0.awayScore == null ? "" : s0.awayScore) + '"></td>' +
+        '<td><input class="num sc" data-gid="' + esc(g.id) + '" data-k="homeScore" ' +
+          'inputmode="numeric" style="width:70px" value="' +
+          esc(s0.homeScore == null ? "" : s0.homeScore) + '"></td>' +
+        "<td>" + (fromScore === "push" ? '<span class="chip push">Push</span>'
+          : fromScore ? '<span class="chip win">' +
+              esc(fromScore === "away" ? g.away : g.home) + " covers</span>"
+          : '<span class="chip">\u2014</span>') + "</td></tr>";
+    });
+    h += "</tbody></table></div></details>" + statusLine();
     el.innerHTML = h;
+    wireWeekStrip(el);
+
+    Array.prototype.forEach.call(el.querySelectorAll(".cv"), function (b) {
+      b.addEventListener("click", function () {
+        var gid = b.dataset.gid, val = b.dataset.res;
+        var cur = resultsFor(w)[gid];
+        (state.results[w] = state.results[w] || {})[gid] = (cur === val ? null : val);
+        render();
+        saveScore(w);
+      });
+    });
 
     Array.prototype.forEach.call(el.querySelectorAll(".sc"), function (i) {
       i.addEventListener("change", function () {
@@ -974,6 +1065,11 @@ if (typeof window !== "undefined") window.PickemParser = API;
                      homeScore: cur.homeScore == null ? "" : cur.homeScore };
         next[k] = i.value.trim() === "" ? "" : Number(i.value);
         (state.scores[w] = state.scores[w] || {})[gid] = next;
+        // typing a full score also settles the result, unless one is already set
+        var derived = P.atsWinner(gamesFor(w).find(function (g) { return g.id === gid; }), next);
+        if (derived && !resultsFor(w)[gid]) {
+          (state.results[w] = state.results[w] || {})[gid] = derived;
+        }
         render();
         saveScore(w);
       });
@@ -1038,7 +1134,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
   function renderLines() {
     var el = document.getElementById("pane-lines");
     var d = state.draft;
-    var h = '<div class="head"><div><h2>Weekly Lines</h2>' +
+    var h = weekStrip("lines") + '<div class="head"><div><h2>Weekly Lines</h2>' +
       "<p>Upload the commissioner's PDF. Check what it read before saving \u2014 " +
       "the spread's position on the page is what says who's favored.</p></div></div>";
 
@@ -1123,6 +1219,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
     }
     h += statusLine();
     el.innerHTML = h;
+    wireWeekStrip(el);
 
     var file = document.getElementById("file");
     document.getElementById("pick").addEventListener("click", function () { file.click(); });
@@ -1279,6 +1376,43 @@ if (typeof window !== "undefined") window.PickemParser = API;
   }
 
   /* ------------------------------------------------ bits */
+  /** Week buttons — one per saved week. Replaces the old header dropdown so
+   *  moving between weeks is a single click from wherever you are. */
+  function weekStrip(kind) {
+    var keys = Object.keys(state.weeks).map(Number)
+      .sort(function (a, b) { return a - b; });
+    if (!keys.length) return "";
+    return '<div class="weeks">' + keys.map(function (w) {
+      var gs = gamesFor(w);
+      var sub, done = false;
+      if (kind === "scores") {
+        var graded = gs.filter(function (g) { return resultOf(w, g); }).length;
+        done = gs.length && graded === gs.length;
+        sub = done ? "final" : graded + "/" + gs.length;
+      } else if (kind === "picks") {
+        var mine = state.me
+          ? gs.filter(function (g) { return pickOf(w, state.me, g.id); }).length : 0;
+        done = gs.length && mine === gs.length;
+        sub = state.me ? (done ? "all in" : mine + "/" + gs.length) : gs.length + " games";
+      } else {
+        sub = gs.length + " games";
+      }
+      return '<button class="wk' + (done ? " done" : "") + '" data-week="' + w +
+        '" aria-pressed="' + (state.week === w) + '">Week ' + w +
+        "<small>" + esc(sub) + "</small></button>";
+    }).join("") + "</div>";
+  }
+
+  function wireWeekStrip(el) {
+    Array.prototype.forEach.call(el.querySelectorAll(".wk"), function (b) {
+      b.addEventListener("click", function () {
+        state.week = Number(b.dataset.week);
+        state.confirmDelete = null;
+        render();
+      });
+    });
+  }
+
   function empty(title, sub) {
     return '<div class="empty"><h3>' + esc(title) + "</h3><p>" + esc(sub) + "</p></div>";
   }
