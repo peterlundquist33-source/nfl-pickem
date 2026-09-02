@@ -98,6 +98,15 @@ picks — the warning says so.
 **Pick locking.** None. Picks stay editable, per the spec's own recommendation
 for three trusted friends.
 
+**Deleting a week.** The Lines tab has a delete for the selected week, behind a
+two-step confirmation. It removes that week's lines, all three people's picks and
+its scores together — leaving any of those behind would let a re-upload inherit
+picks from games that no longer exist. Handy for clearing a test run.
+
+Confirmations are inline rather than `confirm()` dialogs, which a sandboxed frame
+can block outright — a blocked dialog would have made overwriting a week appear
+to do nothing.
+
 **Identity.** Choose your name from a menu, remembered on that device. No
 passwords — the shared passcode gates the site, as specified.
 

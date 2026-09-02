@@ -216,6 +216,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
     scores: {},                  // week -> {gameId: {awayScore, homeScore}}
     draft: null,                 // parsed-but-unsaved lines
     tab: "picks",
+    confirmDelete: null,
     status: ""
   };
 
@@ -253,11 +254,14 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
       render();
       return;
     }
+    // Rebuild rather than merge: a merge would never notice a week someone else
+    // deleted, so it would linger on their screen until a reload.
     db.collection("weeks").onSnapshot(function (snap) {
+      state.weeks = {};
       snap.docs.forEach(function (d) {
         var v = d.data(); if (v) state.weeks[v.week] = v;
       });
-      if (state.week == null) state.week = latestWeek();
+      if (state.week == null || !state.weeks[state.week]) state.week = latestWeek();
       buildChrome(); render();
     }, function () {});
     db.collection("picks").onSnapshot(function (snap) {
@@ -269,6 +273,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
       render();
     }, function () {});
     db.collection("scores").onSnapshot(function (snap) {
+      state.scores = {};
       snap.docs.forEach(function (d) {
         var v = d.data(); if (v) state.scores[v.week] = v.finals || {};
       });
@@ -298,6 +303,33 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
   function enqueue(key, fn) {
     chains[key] = (chains[key] || Promise.resolve()).then(fn, fn);
     return chains[key];
+  }
+
+  // Removing a week means the lines, all three people's picks, and the scores \u2014
+  // otherwise a re-upload inherits picks from games that no longer exist.
+  function weekDocPaths(week) {
+    var paths = ["weeks/" + week, "scores/" + week];
+    PEOPLE.forEach(function (p) { paths.push("picks/" + pickDocId(week, p)); });
+    return paths;
+  }
+
+  async function deleteWeek(week) {
+    if (!db) { note("Can't delete \u2014 no connection."); return; }
+    try {
+      await Promise.all(weekDocPaths(week).map(function (p) {
+        return db.doc(p).delete();
+      }));
+    } catch (e) {
+      note("Couldn't delete week " + week + " \u2014 check your connection.");
+      return;
+    }
+    delete state.weeks[week];
+    delete state.picks[week];
+    delete state.scores[week];
+    if (state.week === week) state.week = latestWeek();
+    state.confirmDelete = null;
+    buildChrome();
+    note("Week " + week + " deleted \u2014 lines, picks and scores.");
   }
 
   function savePick(week, person, gameId, side) {
@@ -344,7 +376,8 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
   }
 
   document.getElementById("weekSel").addEventListener("change", function (e) {
-    state.week = e.target.value ? Number(e.target.value) : null; render();
+    state.week = e.target.value ? Number(e.target.value) : null;
+    state.confirmDelete = null; render();
   });
   document.getElementById("meSel").addEventListener("change", function (e) {
     state.me = e.target.value; localStorage.setItem("c3.me", state.me); render();
@@ -624,9 +657,35 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
       h += '<div class="row"><button class="btn ghost" id="addrow">+ Add game</button>' +
         '<label class="who">Byes <input id="dbyes" style="width:220px" value="' +
         esc((d.byes || []).join(", ")) + '"></label></div>';
-      h += '<div class="row"><button class="btn" id="save">Save Week ' +
-        esc(d.week == null ? "" : d.week) + '</button>' +
+      var clash = d.week != null && state.weeks[d.week];
+      if (clash) {
+        h += '<div class="warn"><b>Week ' + esc(d.week) + " already has lines saved.</b> " +
+          "Saving replaces them. Picks are kept, but any game whose teams changed " +
+          "counts as a new game and loses its picks.</div>";
+      }
+      h += '<div class="row"><button class="btn" id="save">' +
+        (clash ? "Replace Week " : "Save Week ") + esc(d.week == null ? "" : d.week) +
+        "</button>" +
         '<button class="btn ghost" id="cancel">Discard</button></div>';
+    }
+
+    // ---- danger zone: wipe a week so a test run can be cleared out ----
+    var wk = state.week;
+    if (wk != null && state.weeks[wk]) {
+      h += '<h3 style="margin-top:2.2rem;font-size:.78rem;letter-spacing:.14em;' +
+        'text-transform:uppercase;color:var(--muted)">Delete a week</h3>';
+      if (state.confirmDelete === wk) {
+        h += '<div class="warn"><b>Delete week ' + esc(wk) + " for everyone?</b> " +
+          "This removes the lines, all three people's picks and the scores. " +
+          "It cannot be undone.<div class=\"row\">" +
+          '<button class="btn" id="delyes" style="background:var(--loss);color:#fff">' +
+          "Yes, delete week " + esc(wk) + "</button>" +
+          '<button class="btn ghost" id="delno">Keep it</button></div></div>';
+      } else {
+        h += '<div class="row"><button class="btn ghost" id="del">Delete week ' +
+          esc(wk) + "</button>" +
+          '<span class="muted">Clears its lines, picks and scores. Useful after a test run.</span></div>';
+      }
     }
     h += statusLine();
     el.innerHTML = h;
@@ -647,6 +706,19 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
     document.getElementById("blank").addEventListener("click", function () {
       state.draft = { week: latestWeek() ? latestWeek() + 1 : 1, games: [], byes: [], warnings: [] };
       addRow(); render();
+    });
+
+    var delBtn = document.getElementById("del");
+    if (delBtn) delBtn.addEventListener("click", function () {
+      state.confirmDelete = state.week; render();
+    });
+    var delNo = document.getElementById("delno");
+    if (delNo) delNo.addEventListener("click", function () {
+      state.confirmDelete = null; render();
+    });
+    var delYes = document.getElementById("delyes");
+    if (delYes) delYes.addEventListener("click", function () {
+      deleteWeek(state.week);
     });
 
     if (!d) return;
@@ -684,10 +756,6 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
       if (dd.week == null || !dd.games.length) return note("Need a week number and at least one game.");
       var bad = dd.games.filter(function (g) { return !g.away || !g.home; });
       if (bad.length) return note("Every game needs both teams.");
-      if (state.weeks[dd.week] &&
-          !confirm("Week " + dd.week + " already has lines saved. Overwrite them?\n\n" +
-                   "Existing picks are kept, but any game whose teams changed will lose its picks."))
-        return;
       await saveWeek(dd.week, dd.games, dd.byes);
       state.week = dd.week; state.draft = null;
       buildChrome(); render();
