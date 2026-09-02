@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// Rizzlers Pick'ems — Firestore security rules.
+//
+// There are no user accounts (the spec asked for a single shared passcode, not
+// per-person logins), so there is no identity to check against. These rules
+// therefore do the one thing that is actually enforceable: constrain the SHAPE
+// and SIZE of what can be written, and confine writes to the three collections
+// this app uses. Anyone who has the site URL can write; that is the same trust
+// model the spec chose, and it is why the passcode gate exists.
+//
+// What this DOES stop: someone finding the project id and using it as free
+// storage, dumping junk collections into it, or writing huge documents.
+//
+// Deploy: paste into the Firestore Rules tab, or `firebase deploy --only firestore:rules`.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // A week's lines: the games, their spreads, and who is favored.
+    match /weeks/{week} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['week', 'games'])
+                   && request.resource.data.week is int
+                   && request.resource.data.week >= 1
+                   && request.resource.data.week <= 18
+                   && request.resource.data.games is list
+                   && request.resource.data.games.size() <= 20;
+      allow delete: if true;
+    }
+
+    // One document per person per week: picks/{week}-{Person}
+    match /picks/{id} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['week', 'person', 'picks'])
+                   && request.resource.data.week is int
+                   && request.resource.data.person in ['Peter', 'Dalton', 'Hunter']
+                   && request.resource.data.picks is map
+                   && request.resource.data.picks.size() <= 20;
+      allow delete: if true;
+    }
+
+    // Final scores for one week.
+    match /scores/{week} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['week', 'finals'])
+                   && request.resource.data.finals is map
+                   && request.resource.data.finals.size() <= 20;
+      allow delete: if true;
+    }
+
+    // Everything else stays locked.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

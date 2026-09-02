@@ -196,6 +196,21 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-firestore-compat.min.js"></script>
+<script>
+/* Firebase web config. These are PUBLIC identifiers, not secrets — Google
+   documents them as safe to commit. What actually protects the data is
+   firestore.rules in this repo, plus the passcode gate. */
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCtUp7DYEjdE5i_Vt9oTqzpmNAgHP32xy8",
+  authDomain: "rizzlers-pickems.firebaseapp.com",
+  projectId: "rizzlers-pickems",
+  storageBucket: "rizzlers-pickems.firebasestorage.app",
+  messagingSenderId: "401907218298",
+  appId: "1:401907218298:web:795ef076067ee1926b88c3"
+};
+</script>
 <script>
 /* __PARSER__ */
 </script>
@@ -246,11 +261,18 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
   async function start() {
     buildChrome();
     render();
+    // Firebase's compat SDK exposes doc()/collection()/set()/onSnapshot() with the
+    // same shape this app was already written against, so it drops straight in.
     try {
-      db = (window.claude && window.claude.use) ? await window.claude.use("db") : null;
+      if (window.firebase && window.FIREBASE_CONFIG) {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+        db = firebase.firestore();
+      } else {
+        db = null;
+      }
     } catch (e) { db = null; }
     if (!db) {
-      state.status = "Offline \u2014 shared saving unavailable in this view.";
+      state.status = "Can't reach the database \u2014 picks won't be saved. Reload to retry.";
       render();
       return;
     }

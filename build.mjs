@@ -28,4 +28,11 @@ const browserParser = parser.replace(
 const out = html.replace(MARKER, browserParser);
 mkdirSync(join(root, "dist"), { recursive: true });
 writeFileSync(join(root, "dist/index.html"), out);
-console.log(`dist/index.html  ${(out.length / 1024).toFixed(1)} KB`);
+
+// docs/ is what GitHub Pages serves, so it has to stay in step with dist/.
+// .nojekyll stops Pages from running Jekyll over it.
+mkdirSync(join(root, "docs"), { recursive: true });
+writeFileSync(join(root, "docs/index.html"), out);
+writeFileSync(join(root, "docs/.nojekyll"), "");
+
+console.log(`dist/index.html + docs/index.html  ${(out.length / 1024).toFixed(1)} KB`);
