@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img"
+     aria-label="Rizzlers Pick'ems">
+  <!-- Site palette: amber on near-black, same as the odds board. A single bold
+       letterform is the only thing that survives at 16px in a tab strip. -->
+  <rect width="64" height="64" rx="14" fill="#ffb020"/>
+  <path d="M18 47V17h13.4c6.8 0 10.9 3.4 10.9 9.2 0 4.1-2.1 7-5.8 8.3L44 47h-8.2
+           l-6.2-11h-3.9v11H18zm7.7-17h5c2.8 0 4.4-1.3 4.4-3.6s-1.6-3.6-4.4-3.6h-5V30z"
+        fill="#0e1116"/>
+</svg>

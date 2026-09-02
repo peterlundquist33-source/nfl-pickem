@@ -57,4 +57,9 @@ mkdirSync(join(root, "docs"), { recursive: true });
 writeFileSync(join(root, "docs/index.html"), out);
 writeFileSync(join(root, "docs/.nojekyll"), "");
 
+// the tab icon ships next to the page
+const icon = readFileSync(join(root, "src/favicon.svg"), "utf8");
+writeFileSync(join(root, "dist/favicon.svg"), icon);
+writeFileSync(join(root, "docs/favicon.svg"), icon);
+
 console.log(`dist/index.html + docs/index.html  ${(out.length / 1024).toFixed(1)} KB`);
