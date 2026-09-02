@@ -68,6 +68,12 @@ week's records, and shortcuts into Picks, Scores and Standings.
 number, so uploading a catch-up week lands you on it. Choosing a week yourself
 sticks; a new upload won't yank you off what you're looking at.
 
+At the bottom sits a ready-made message for the commissioner, listing the group's
+majority pick per game, with a copy button. Games still short of all three picks
+appear as `TBD (Away at Home)` and are counted in a warning above the box, so
+nobody sends an incomplete slate without noticing. The commissioner's name is the
+`COMMISSIONER` constant in `src/index.html`.
+
 ## Grading a week
 
 Click whichever team **covered the spread** — one click per game, no typing. The
