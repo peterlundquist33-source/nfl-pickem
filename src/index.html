@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>Rizzlers Pick'ems</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
@@ -154,6 +160,8 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+</head>
+<body>
 
 <div id="gate">
   <div class="gate-card">
@@ -802,12 +810,37 @@ window.FIREBASE_CONFIG = {
   }
 
   /* ------------------------------------------------ pdf */
+  var WORKER_URL =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  var workerReady = null;
+
+  // Chrome refuses to construct a Worker from a different origin, so pointing
+  // workerSrc straight at the CDN throws before a single page is read. Fetch the
+  // worker source and hand pdf.js a same-origin blob URL instead.
+  function preparePdfWorker() {
+    if (workerReady) return workerReady;
+    workerReady = fetch(WORKER_URL)
+      .then(function (r) {
+        if (!r.ok) throw new Error("worker fetch " + r.status);
+        return r.text();
+      })
+      .then(function (src) {
+        var blob = new Blob([src], { type: "text/javascript" });
+        pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+      })
+      .catch(function () {
+        // Last resort: let pdf.js try the CDN directly. It may still work in
+        // browsers that allow it, and if not the error surfaces below.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL;
+      });
+    return workerReady;
+  }
+
   async function readPdf(f) {
     note("Reading " + f.name + "\u2026");
     try {
-      if (!window.pdfjsLib) throw new Error("PDF library didn't load");
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      if (!window.pdfjsLib) throw new Error("the PDF library failed to load \u2014 check your connection");
+      await preparePdfWorker();
       var buf = await f.arrayBuffer();
       var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
       var words = [], pageWidth = 612;
@@ -828,8 +861,15 @@ window.FIREBASE_CONFIG = {
       out.debug = words.map(function (x) {
         return Math.round(x.x) + "," + Math.round(x.y) + "  " + x.str;
       }).join("\n");
-      if (!out.games.length) {
-        state.draft = { week: null, games: [], byes: out.byes, warnings: out.warnings };
+      if (!words.length) {
+        state.draft = { week: null, games: [], byes: [], debug: "",
+          warnings: ["This PDF has no text in it \u2014 it's probably a scan or an "
+                   + "image. There's nothing to read, so enter the games by hand."] };
+        addRow();
+        note("No text found in that PDF.");
+      } else if (!out.games.length) {
+        state.draft = { week: null, games: [], byes: out.byes,
+                        warnings: out.warnings, debug: out.debug };
         addRow();
         note("Couldn't find any games in that PDF \u2014 enter them by hand below.");
       } else {
@@ -837,7 +877,9 @@ window.FIREBASE_CONFIG = {
         note("Read " + out.games.length + " games. Check the favored column before saving.");
       }
     } catch (e) {
-      state.draft = { week: null, games: [], byes: [], warnings: ["PDF error: " + e.message] };
+      state.draft = { week: null, games: [], byes: [],
+        warnings: ["Couldn't read that PDF: " + (e && e.message ? e.message : e)],
+        debug: "" };
       addRow();
       note("Couldn't read that PDF \u2014 enter the games by hand below.");
     }
@@ -852,3 +894,6 @@ window.FIREBASE_CONFIG = {
   }
 })();
 </script>
+
+</body>
+</html>
