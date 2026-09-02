@@ -113,6 +113,44 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .chip.push{color:var(--push);border-color:var(--push)}
 .final{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
 
+/* ---------- home ---------- */
+.hm-hero{display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap;
+  padding:1.4rem 0 .2rem}
+.hm-hero h2{font-size:1.9rem;text-transform:uppercase;letter-spacing:.03em}
+.hm-hero .sub{color:var(--muted);font-size:.85rem;margin-top:.2rem}
+.hm-jump{display:flex;gap:.4rem;margin-left:auto;flex-wrap:wrap}
+.hm-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:.6rem;margin:1rem 0 .4rem}
+.hm-tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.75rem .9rem}
+.hm-tile.lead{border-color:var(--amber)}
+.hm-tile h4{margin:0;font-family:var(--cond);font-size:.7rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);font-weight:700}
+.hm-tile .v{font-family:var(--mono);font-size:1.45rem;font-weight:600;margin-top:.2rem}
+.hm-tile .s{font-size:.72rem;color:var(--dim);margin-top:.05rem}
+.hm-game{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  margin-bottom:.55rem;overflow:hidden}
+.hm-top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+  padding:.6rem .85rem;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.hm-top .mu{font-weight:600;font-size:.9rem}
+.hm-top .ln{font-family:var(--mono);font-size:.76rem;color:var(--amber)}
+.hm-top .rt{margin-left:auto;display:flex;align-items:center;gap:.4rem}
+.hm-rows{display:flex;flex-direction:column}
+.hm-row{display:grid;grid-template-columns:78px 1fr auto;gap:.6rem;align-items:center;
+  padding:.42rem .85rem;font-size:.86rem;border-top:1px solid rgba(255,255,255,.03)}
+.hm-row:first-child{border-top:0}
+.hm-row.grp{background:rgba(255,176,32,.06);font-weight:600}
+.hm-row .who{color:var(--muted);font-family:var(--cond);font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;font-size:.74rem}
+.hm-row.grp .who{color:var(--amber)}
+.hm-row .team{color:var(--text)}
+.hm-row .team.none{color:var(--dim);font-style:italic}
+.mark{font-family:var(--cond);font-weight:800;font-size:.72rem;letter-spacing:.06em;
+  padding:.1rem .4rem;border-radius:4px;min-width:22px;text-align:center}
+.mark.w{color:var(--win);background:rgba(62,207,142,.13)}
+.mark.l{color:var(--loss);background:rgba(242,85,95,.13)}
+.mark.p{color:var(--push);background:var(--panel-2)}
+
 /* ---------- week strip ---------- */
 .weeks{display:flex;flex-wrap:wrap;gap:.4rem;padding:1.1rem 0 .2rem}
 .wk{font-family:var(--cond);font-weight:700;font-size:.82rem;letter-spacing:.06em;
@@ -216,7 +254,8 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
       </label>
     </div>
     <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-pane="picks" aria-selected="true">Picks</button>
+      <button class="tab" role="tab" data-pane="home" aria-selected="true">Home</button>
+      <button class="tab" role="tab" data-pane="picks" aria-selected="false">Picks</button>
       <button class="tab" role="tab" data-pane="scores" aria-selected="false">Scores</button>
       <button class="tab" role="tab" data-pane="standings" aria-selected="false">Standings</button>
       <button class="tab" role="tab" data-pane="lines" aria-selected="false">Lines</button>
@@ -224,7 +263,8 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
   </header>
 
   <main class="wrap">
-    <section id="pane-picks"></section>
+    <section id="pane-home"></section>
+    <section id="pane-picks" hidden></section>
     <section id="pane-scores" hidden></section>
     <section id="pane-standings" hidden></section>
     <section id="pane-lines" hidden></section>
@@ -654,7 +694,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
     scores: {},                  // week -> {gameId: {awayScore, homeScore}}
     results: {},                 // week -> {gameId: "away"|"home"|"push"}
     draft: null,                 // parsed-but-unsaved lines
-    tab: "picks",
+    tab: "home",
     confirmDelete: null,
     status: ""
   };
@@ -730,9 +770,18 @@ if (typeof window !== "undefined") window.PickemParser = API;
     }, function () {});
   }
 
+  // The week most recently uploaded, not the highest number — uploading week 3
+  // after week 9 should still land you on week 3.
   function latestWeek() {
-    var ks = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
-    return ks.length ? ks[ks.length - 1] : null;
+    var ks = Object.keys(state.weeks).map(Number);
+    if (!ks.length) return null;
+    ks.sort(function (a, b) {
+      var sa = (state.weeks[a] || {}).savedAt || "";
+      var sb = (state.weeks[b] || {}).savedAt || "";
+      if (sa && sb && sa !== sb) return sa < sb ? -1 : 1;
+      return a - b;
+    });
+    return ks[ks.length - 1];
   }
 
   async function saveWeek(week, games, byes) {
@@ -826,17 +875,22 @@ if (typeof window !== "undefined") window.PickemParser = API;
   document.getElementById("meSel").addEventListener("change", function (e) {
     state.me = e.target.value; localStorage.setItem("c3.me", state.me); render();
   });
-  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (t) {
-    t.addEventListener("click", function () {
-      state.tab = t.dataset.pane;
-      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) {
-        x.setAttribute("aria-selected", String(x === t));
-      });
-      ["picks", "scores", "standings", "lines"].forEach(function (p) {
-        document.getElementById("pane-" + p).hidden = (p !== state.tab);
-      });
-      render();
+  var PANES = ["home", "picks", "scores", "standings", "lines"];
+
+  function selectTab(name) {
+    state.tab = name;
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) {
+      x.setAttribute("aria-selected", String(x.dataset.pane === name));
     });
+    PANES.forEach(function (p) {
+      document.getElementById("pane-" + p).hidden = (p !== name);
+    });
+    window.scrollTo({ top: 0, behavior: "auto" });
+    render();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (t) {
+    t.addEventListener("click", function () { selectTab(t.dataset.pane); });
   });
 
   /* ------------------------------------------------ helpers */
@@ -875,10 +929,98 @@ if (typeof window !== "undefined") window.PickemParser = API;
   /* ------------------------------------------------ render */
   function render() {
     if (document.getElementById("app").hidden) return;
+    renderHome();
     renderPicks();
     renderScores();
     renderStandings();
     renderLines();
+  }
+
+  function renderHome() {
+    var el = document.getElementById("pane-home");
+    if (!Object.keys(state.weeks).length) {
+      el.innerHTML = empty("Nothing here yet",
+        "Upload a weekly spreads PDF on the Lines tab and it'll show up here.");
+      return;
+    }
+    var w = state.week, gs = gamesFor(w);
+    var h = weekStrip("home");
+
+    var graded = gs.filter(function (g) { return resultOf(w, g); }).length;
+    var allIn = gs.filter(function (g) {
+      return P.majority(votesFor(w, g.id), PEOPLE);
+    }).length;
+
+    h += '<div class="hm-hero"><div><h2>Week ' + w + "</h2>" +
+      '<div class="sub">' + gs.length + " games &middot; " + allIn +
+      " with all three picks in &middot; " + graded + " graded</div></div>" +
+      '<div class="hm-jump">' +
+        '<button class="btn ghost" data-go="picks">Make picks</button>' +
+        '<button class="btn ghost" data-go="scores">Enter results</button>' +
+        '<button class="btn ghost" data-go="standings">Standings</button>' +
+      "</div></div>";
+
+    // this week's records, once anything is graded
+    if (graded) {
+      var grp = P.tally(gs, function (g) { return P.majority(votesFor(w, g.id), PEOPLE); },
+        function (g) { return resultOf(w, g); });
+      h += '<div class="hm-tiles"><div class="hm-tile lead"><h4>The Group</h4>' +
+        '<div class="v">' + recStr(grp) + '</div><div class="s">majority pick</div></div>';
+      PEOPLE.forEach(function (p) {
+        var r = P.tally(gs, function (g) { return pickOf(w, p, g.id); },
+          function (g) { return resultOf(w, g); });
+        h += '<div class="hm-tile"><h4>' + esc(p) + '</h4><div class="v">' + recStr(r) +
+          '</div><div class="s">' + pctStr(r) + " this week</div></div>";
+      });
+      h += "</div>";
+    }
+
+    var day = null;
+    gs.forEach(function (g) {
+      if (g.day && g.day !== day) { day = g.day; h += '<div class="daymark">' + esc(day) + "</div>"; }
+      var votes = votesFor(w, g.id);
+      var maj = P.majority(votes, PEOPLE);
+      var res = resultOf(w, g);
+      var nameOf = function (side) { return side === "away" ? g.away : g.home; };
+
+      function mark(side) {
+        if (!res || !side) return "";
+        if (res === "push") return '<span class="mark p">PUSH</span>';
+        return side === res ? '<span class="mark w">&#10003;</span>'
+                            : '<span class="mark l">&#10007;</span>';
+      }
+
+      var right = res
+        ? (res === "push" ? '<span class="chip push">Push</span>'
+           : '<span class="chip win">' + esc(nameOf(res)) + " covered</span>")
+        : '<span class="chip">' + Object.keys(votes).length + "/3 picked</span>";
+
+      h += '<article class="hm-game"><div class="hm-top">' +
+        '<span class="mu">' + esc(g.away) + " at " + esc(g.home) + "</span>" +
+        '<span class="ln">' + (g.favored
+          ? esc(nameOf(g.favored)) + " \u2212" + fmt(g.spread) : "no line") + "</span>" +
+        '<span class="rt">' + right + "</span></div>" +
+        '<div class="hm-rows">';
+
+      PEOPLE.forEach(function (p) {
+        var v = votes[p];
+        h += '<div class="hm-row"><span class="who">' + esc(p) + "</span>" +
+          '<span class="team' + (v ? "" : " none") + '">' +
+          (v ? esc(nameOf(v)) : "no pick yet") + "</span>" + mark(v) + "</div>";
+      });
+      h += '<div class="hm-row grp"><span class="who">Group</span>' +
+        '<span class="team' + (maj ? "" : " none") + '">' +
+        (maj ? esc(nameOf(maj)) : "waiting on all three") + "</span>" + mark(maj) + "</div>";
+
+      h += "</div></article>";
+    });
+
+    h += statusLine();
+    el.innerHTML = h;
+    wireWeekStrip(el);
+    Array.prototype.forEach.call(el.querySelectorAll("[data-go]"), function (b) {
+      b.addEventListener("click", function () { selectTab(b.dataset.go); });
+    });
   }
 
   function renderPicks() {

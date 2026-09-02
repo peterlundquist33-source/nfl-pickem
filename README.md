@@ -57,6 +57,17 @@ matchup it records a warning and leaves the field blank rather than guessing.
 Every parse lands in an editable review table and nothing is saved until a human
 confirms it.
 
+## The Home tab
+
+Opens on the most recently uploaded week and acts as the hub. Per game it shows
+all three picks side by side, the group's majority underneath, and — once results
+are in — a check or cross against each person plus the group. Above that sit this
+week's records, and shortcuts into Picks, Scores and Standings.
+
+"Most recent" means most recently *uploaded* (by `savedAt`), not the highest
+number, so uploading a catch-up week lands you on it. Choosing a week yourself
+sticks; a new upload won't yank you off what you're looking at.
+
 ## Grading a week
 
 Click whichever team **covered the spread** — one click per game, no typing. The
