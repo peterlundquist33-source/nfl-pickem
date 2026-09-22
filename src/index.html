@@ -389,9 +389,17 @@ window.FIREBASE_CONFIG = {
 /* __PARSER__ */
 </script>
 <script>
+/* The season's kickoff times, baked in at build time by build.mjs from
+   lib/schedule-2026.json. The sandbox blocks outbound requests, so this is the
+   only way the page can know when anything kicks off. */
+/* __SCHEDULE__ */
+</script>
+<script>
 (function () {
   "use strict";
   var P = window.PickemParser;
+  var S = window.PickemSchedule;
+  var SCHEDULE = window.SCHEDULE || null;
   var PEOPLE = ["Peter", "Dalton", "Hunter"];
   var COMMISSIONER = "Brian";
   // Your name is the password: one field that both lets you in and says who you
@@ -635,7 +643,35 @@ window.FIREBASE_CONFIG = {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  function gamesFor(w) { return (state.weeks[w] || {}).games || []; }
+  // The commissioner's PDF has no kickoff times, so the games come off it in
+  // whatever order they were typed. Everything that lists a week goes through
+  // here, which means Home, Picks, Scores and the message to the commissioner
+  // all show the same order — the real one. Ordering is pure and cheap on a
+  // sixteen-game slate, so there's nothing to cache.
+  function gamesFor(w) {
+    return S.orderGames((state.weeks[w] || {}).games || [], SCHEDULE);
+  }
+  /** Which day heading a game sits under: the schedule's, or the PDF's. */
+  function dayOf(g) { return S.effectiveDay(g, SCHEDULE); }
+
+  /**
+   * Warn about games the baked schedule can't find.
+   *
+   * They still save and still work — they just keep the order the PDF gave
+   * them. Without this the only symptom of a team name the schedule doesn't
+   * recognise is a game sitting in a slightly odd place, which nobody would
+   * ever trace back to a spelling.
+   */
+  function flagUnscheduled(draft) {
+    var miss = S.unscheduled(draft.games || [], SCHEDULE);
+    if (!miss.length) return;
+    draft.warnings = (draft.warnings || []).concat(
+      miss.map(function (g) {
+        return "No kickoff time found for “" + g.away + " at " + g.home +
+          "” — check the team names. It'll still save, but it stays " +
+          "in the order the PDF had it.";
+      }));
+  }
   function picksFor(w) { return state.picks[w] || {}; }
   function scoresFor(w) { return state.scores[w] || {}; }
   function pickOf(w, person, gid) { return ((picksFor(w)[person] || {})[gid]) || null; }
@@ -738,11 +774,12 @@ window.FIREBASE_CONFIG = {
 
     var day = null;
     gs.forEach(function (g) {
-      if (g.day && g.day !== day) {
+      var gday = dayOf(g);
+      if (gday && gday !== day) {
         if (day !== null) h += "</div>";
-        day = g.day;
+        day = gday;
         h += '<div class="daymark">' + esc(day) + '</div><div class="hm-list">';
-      } else if (day === null && !g.day) {
+      } else if (day === null && !gday) {
         day = ""; h += '<div class="hm-list">';
       }
       var votes = votesFor(w, g.id);
@@ -833,7 +870,8 @@ window.FIREBASE_CONFIG = {
     var day = null;
     h += '<div class="games">';
     gs.forEach(function (g) {
-      if (g.day && g.day !== day) { day = g.day; h += '<div class="daymark">' + esc(day) + "</div>"; }
+      var gday = dayOf(g);
+      if (gday && gday !== day) { day = gday; h += '<div class="daymark">' + esc(day) + "</div>"; }
       h += gameRow(w, g);
     });
     h += "</div>" + statusLine();
@@ -923,7 +961,8 @@ window.FIREBASE_CONFIG = {
 
     var day = null;
     gs.forEach(function (g) {
-      if (g.day && g.day !== day) { day = g.day; h += '<div class="daymark">' + esc(day) + "</div>"; }
+      var gday = dayOf(g);
+      if (gday && gday !== day) { day = gday; h += '<div class="daymark">' + esc(day) + "</div>"; }
       var r = resultOf(w, g);
       var sc = scoresFor(w)[g.id];
       var line = g.favored
@@ -1288,6 +1327,7 @@ window.FIREBASE_CONFIG = {
         addRow();
         note("Couldn't find any games in that PDF \u2014 enter them by hand below.");
       } else {
+        flagUnscheduled(out);
         state.draft = out;
         note("Read " + out.games.length + " games. Check the favored column before saving.");
       }

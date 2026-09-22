@@ -5,6 +5,6 @@
   "description": "Rizzlers Pick'ems — season-long NFL pick'em against the spread for three people.",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test test/parse.test.js"
+    "test": "node --test test/*.test.js"
   }
 }

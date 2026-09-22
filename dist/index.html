@@ -386,6 +386,7 @@ window.FIREBASE_CONFIG = {
 };
 </script>
 <script>
+(function () {
 /*
  * parse-lines.js — turn a weekly spreads PDF into structured games.
  *
@@ -774,11 +775,206 @@ const API = {
 
 if (typeof window !== "undefined") window.PickemParser = API;
 
+})();
+
+</script>
+<script>
+/* The season's kickoff times, baked in at build time by build.mjs from
+   lib/schedule-2026.json. The sandbox blocks outbound requests, so this is the
+   only way the page can know when anything kicks off. */
+window.SCHEDULE = {"games":{"ari-dal":{"away":"ARI","day":"Sunday","home":"DAL","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"ari-kc":{"away":"ARI","day":"Sunday","home":"KC","kickoff":"2026-11-22T18:00:00Z","slot":"Sunday Noon","week":11},"ari-lac":{"away":"ARI","day":"Sunday","home":"LAC","kickoff":"2026-09-13T20:25:00Z","slot":"Sunday Afternoon","week":1},"ari-lar":{"away":"ARI","day":"Sunday","home":"LAR","kickoff":"2026-10-18T20:05:00Z","slot":"Sunday Afternoon","week":6},"ari-no":{"away":"ARI","day":"Sunday","home":"NO","kickoff":"2026-12-27T18:00:00Z","slot":"Sunday Noon","week":16},"ari-nyg":{"away":"ARI","day":"Sunday","home":"NYG","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"ari-sea":{"away":"ARI","day":"Sunday","home":"SEA","kickoff":"2026-11-08T21:25:00Z","slot":"Sunday Afternoon","week":9},"ari-sf":{"away":"ARI","day":"Sunday","home":"SF","kickoff":"2026-09-27T20:05:00Z","slot":"Sunday Afternoon","week":3},"atl-car":{"away":"ATL","home":"CAR","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"atl-cle":{"away":"ATL","day":"Sunday","home":"CLE","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"atl-gb":{"away":"ATL","day":"Thursday","home":"GB","kickoff":"2026-09-25T00:15:00Z","slot":"Thursday Night","week":3},"atl-min":{"away":"ATL","day":"Sunday","home":"MIN","kickoff":"2026-11-29T18:00:00Z","slot":"Sunday Noon","week":12},"atl-no":{"away":"ATL","day":"Monday","home":"NO","kickoff":"2026-10-06T00:15:00Z","slot":"Monday Night","week":4},"atl-pit":{"away":"ATL","day":"Sunday","home":"PIT","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"atl-tb":{"away":"ATL","day":"Sunday","home":"TB","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"atl-wsh":{"away":"ATL","day":"Sunday","home":"WSH","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"bal-atl":{"away":"BAL","day":"Sunday","home":"ATL","kickoff":"2026-10-12T00:20:00Z","slot":"Sunday Night","week":5},"bal-buf":{"away":"BAL","day":"Sunday","home":"BUF","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"bal-car":{"away":"BAL","day":"Sunday","home":"CAR","kickoff":"2026-11-22T18:00:00Z","slot":"Sunday Noon","week":11},"bal-cin":{"away":"BAL","day":"Thursday","home":"CIN","kickoff":"2027-01-01T01:15:00Z","slot":"Thursday Night","week":17},"bal-cle":{"away":"BAL","day":"Sunday","home":"CLE","kickoff":"2026-10-18T17:00:00Z","slot":"Sunday Noon","week":6},"bal-dal":{"away":"BAL","day":"Sunday","home":"DAL","kickoff":"2026-09-27T20:25:00Z","slot":"International","week":3},"bal-hou":{"away":"BAL","day":"Sunday","home":"HOU","kickoff":"2026-11-29T18:00:00Z","slot":"Sunday Noon","week":12},"bal-ind":{"away":"BAL","day":"Sunday","home":"IND","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"bal-pit":{"away":"BAL","day":"Sunday","home":"PIT","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"buf-den":{"away":"BUF","day":"Friday","home":"DEN","kickoff":"2026-12-25T21:30:00Z","slot":"Friday Afternoon","week":16},"buf-gb":{"away":"BUF","day":"Sunday","home":"GB","kickoff":"2026-12-14T01:20:00Z","slot":"Sunday Night","week":14},"buf-hou":{"away":"BUF","day":"Sunday","home":"HOU","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"buf-lar":{"away":"BUF","day":"Monday","home":"LAR","kickoff":"2026-10-13T00:15:00Z","slot":"Monday Night","week":5},"buf-lv":{"away":"BUF","day":"Sunday","home":"LV","kickoff":"2026-10-18T20:25:00Z","slot":"Sunday Afternoon","week":6},"buf-mia":{"away":"BUF","day":"Sunday","home":"MIA","kickoff":"2027-01-03T18:00:00Z","slot":"Sunday Noon","week":17},"buf-min":{"away":"BUF","day":"Monday","home":"MIN","kickoff":"2026-11-10T01:15:00Z","slot":"Monday Night","week":9},"buf-ne":{"away":"BUF","day":"Sunday","home":"NE","kickoff":"2026-12-06T21:25:00Z","slot":"Sunday Afternoon","week":13},"buf-nyj":{"away":"BUF","day":"Sunday","home":"NYJ","kickoff":"2026-11-15T18:00:00Z","slot":"Sunday Noon","week":10},"car-atl":{"away":"CAR","day":"Sunday","home":"ATL","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"car-cle":{"away":"CAR","day":"Sunday","home":"CLE","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"car-gb":{"away":"CAR","day":"Thursday","home":"GB","kickoff":"2026-10-30T00:15:00Z","slot":"Thursday Night","week":8},"car-min":{"away":"CAR","day":"Sunday","home":"MIN","kickoff":"2026-12-06T21:25:00Z","slot":"Sunday Afternoon","week":13},"car-no":{"away":"CAR","day":"Sunday","home":"NO","kickoff":"2026-11-15T18:00:00Z","slot":"Sunday Noon","week":10},"car-phi":{"away":"CAR","day":"Sunday","home":"PHI","kickoff":"2026-10-18T17:00:00Z","slot":"Sunday Noon","week":6},"car-pit":{"away":"CAR","home":"PIT","kickoff":"2026-12-27T05:00:00Z","tbd":true,"week":16},"car-tb":{"away":"CAR","day":"Monday","home":"TB","kickoff":"2026-12-01T01:15:00Z","slot":"Monday Night","week":12},"chi-atl":{"away":"CHI","day":"Sunday","home":"ATL","kickoff":"2026-10-18T17:00:00Z","slot":"Sunday Noon","week":6},"chi-buf":{"away":"CHI","day":"Saturday","home":"BUF","kickoff":"2026-12-20T01:20:00Z","slot":"Saturday Night","week":15},"chi-car":{"away":"CHI","day":"Sunday","home":"CAR","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"chi-det":{"away":"CHI","day":"Thursday","home":"DET","kickoff":"2026-11-26T18:00:00Z","slot":"Thursday Afternoon","week":12},"chi-gb":{"away":"CHI","day":"Sunday","home":"GB","kickoff":"2026-10-11T20:25:00Z","slot":"Sunday Afternoon","week":5},"chi-mia":{"away":"CHI","day":"Sunday","home":"MIA","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"chi-min":{"away":"CHI","home":"MIN","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"chi-sea":{"away":"CHI","day":"Monday","home":"SEA","kickoff":"2026-11-03T01:15:00Z","slot":"Monday Night","week":8},"cin-atl":{"away":"CIN","day":"Sunday","home":"ATL","kickoff":"2026-11-08T14:30:00Z","slot":"International","week":9},"cin-bal":{"away":"CIN","day":"Sunday","home":"BAL","kickoff":"2026-10-25T17:00:00Z","slot":"Sunday Noon","week":7},"cin-car":{"away":"CIN","day":"Sunday","home":"CAR","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"cin-cle":{"away":"CIN","day":"Sunday","home":"CLE","kickoff":"2026-12-06T18:00:00Z","slot":"Sunday Noon","week":13},"cin-hou":{"away":"CIN","day":"Sunday","home":"HOU","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"cin-ind":{"away":"CIN","home":"IND","kickoff":"2026-12-27T05:00:00Z","tbd":true,"week":16},"cin-mia":{"away":"CIN","day":"Sunday","home":"MIA","kickoff":"2026-10-11T17:00:00Z","slot":"Sunday Noon","week":5},"cin-pit":{"away":"CIN","day":"Sunday","home":"PIT","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"cin-wsh":{"away":"CIN","day":"Monday","home":"WSH","kickoff":"2026-11-24T01:15:00Z","slot":"Monday Night","week":11},"cle-bal":{"away":"CLE","day":"Sunday","home":"BAL","kickoff":"2026-12-27T18:00:00Z","slot":"Sunday Noon","week":16},"cle-cin":{"away":"CLE","home":"CIN","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"cle-jax":{"away":"CLE","day":"Sunday","home":"JAX","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"cle-no":{"away":"CLE","day":"Sunday","home":"NO","kickoff":"2026-11-08T18:00:00Z","slot":"Sunday Noon","week":9},"cle-nyg":{"away":"CLE","day":"Sunday","home":"NYG","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"cle-nyj":{"away":"CLE","day":"Sunday","home":"NYJ","kickoff":"2026-10-11T17:00:00Z","slot":"Sunday Noon","week":5},"cle-pit":{"away":"CLE","day":"Sunday","home":"PIT","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"cle-tb":{"away":"CLE","day":"Sunday","home":"TB","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"cle-ten":{"away":"CLE","day":"Sunday","home":"TEN","kickoff":"2026-10-25T17:00:00Z","slot":"Sunday Noon","week":7},"dal-gb":{"away":"DAL","day":"Sunday","home":"GB","kickoff":"2026-10-19T00:20:00Z","slot":"Sunday Night","week":6},"dal-hou":{"away":"DAL","day":"Sunday","home":"HOU","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"dal-ind":{"away":"DAL","day":"Sunday","home":"IND","kickoff":"2026-11-08T18:00:00Z","slot":"Sunday Noon","week":9},"dal-lar":{"away":"DAL","day":"Sunday","home":"LAR","kickoff":"2026-12-20T21:25:00Z","slot":"Sunday Afternoon","week":15},"dal-nyg":{"away":"DAL","day":"Sunday","home":"NYG","kickoff":"2026-09-14T00:20:00Z","slot":"Sunday Night","week":1},"dal-phi":{"away":"DAL","day":"Monday","home":"PHI","kickoff":"2026-10-27T00:15:00Z","slot":"Monday Night","week":7},"dal-sea":{"away":"DAL","day":"Monday","home":"SEA","kickoff":"2026-12-08T01:15:00Z","slot":"Monday Night","week":13},"dal-wsh":{"away":"DAL","home":"WSH","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"den-ari":{"away":"DEN","day":"Sunday","home":"ARI","kickoff":"2026-10-25T20:05:00Z","slot":"Sunday Afternoon","week":7},"den-car":{"away":"DEN","day":"Sunday","home":"CAR","kickoff":"2026-11-08T18:00:00Z","slot":"Sunday Noon","week":9},"den-kc":{"away":"DEN","day":"Monday","home":"KC","kickoff":"2026-09-15T00:15:00Z","slot":"Monday Night","week":1},"den-lac":{"away":"DEN","day":"Sunday","home":"LAC","kickoff":"2026-10-11T20:05:00Z","slot":"Sunday Afternoon","week":5},"den-lv":{"away":"DEN","day":"Sunday","home":"LV","kickoff":"2026-12-20T21:25:00Z","slot":"Sunday Afternoon","week":15},"den-ne":{"away":"DEN","home":"NE","kickoff":"2027-01-03T05:00:00Z","tbd":true,"week":17},"den-nyj":{"away":"DEN","day":"Sunday","home":"NYJ","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"den-pit":{"away":"DEN","day":"Friday","home":"PIT","kickoff":"2026-11-27T20:00:00Z","slot":"Friday Afternoon","week":12},"den-sf":{"away":"DEN","day":"Sunday","home":"SF","kickoff":"2026-10-04T20:25:00Z","slot":"Sunday Afternoon","week":4},"det-ari":{"away":"DET","day":"Sunday","home":"ARI","kickoff":"2026-10-11T20:25:00Z","slot":"Sunday Afternoon","week":5},"det-atl":{"away":"DET","day":"Sunday","home":"ATL","kickoff":"2026-12-06T18:00:00Z","slot":"Sunday Noon","week":13},"det-buf":{"away":"DET","day":"Thursday","home":"BUF","kickoff":"2026-09-18T00:15:00Z","slot":"Thursday Night","week":2},"det-car":{"away":"DET","day":"Sunday","home":"CAR","kickoff":"2026-10-05T00:20:00Z","slot":"Sunday Night","week":4},"det-chi":{"away":"DET","day":"Sunday","home":"CHI","kickoff":"2027-01-03T21:25:00Z","slot":"Sunday Afternoon","week":17},"det-gb":{"away":"DET","home":"GB","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"det-mia":{"away":"DET","day":"Sunday","home":"MIA","kickoff":"2026-11-08T18:00:00Z","slot":"Sunday Noon","week":9},"det-min":{"away":"DET","day":"Sunday","home":"MIN","kickoff":"2026-12-21T01:20:00Z","slot":"Sunday Night","week":15},"gb-chi":{"away":"GB","day":"Friday","home":"CHI","kickoff":"2026-12-25T18:00:00Z","slot":"Friday Afternoon","week":16},"gb-det":{"away":"GB","day":"Sunday","home":"DET","kickoff":"2026-10-25T20:25:00Z","slot":"Sunday Afternoon","week":7},"gb-lar":{"away":"GB","day":"Wednesday","home":"LAR","kickoff":"2026-11-26T01:00:00Z","slot":"Wednesday","week":12},"gb-min":{"away":"GB","day":"Sunday","home":"MIN","kickoff":"2026-09-13T20:25:00Z","slot":"Sunday Afternoon","week":1},"gb-ne":{"away":"GB","day":"Sunday","home":"NE","kickoff":"2026-11-08T21:25:00Z","slot":"Sunday Afternoon","week":9},"gb-no":{"away":"GB","day":"Sunday","home":"NO","kickoff":"2026-12-06T18:00:00Z","slot":"Sunday Noon","week":13},"gb-nyj":{"away":"GB","day":"Sunday","home":"NYJ","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"gb-tb":{"away":"GB","day":"Sunday","home":"TB","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"hou-cle":{"away":"HOU","day":"Sunday","home":"CLE","kickoff":"2026-11-15T18:00:00Z","slot":"Sunday Noon","week":10},"hou-gb":{"away":"HOU","day":"Monday","home":"GB","kickoff":"2027-01-05T01:15:00Z","slot":"Monday Night","week":17},"hou-ind":{"away":"HOU","day":"Sunday","home":"IND","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"hou-jax":{"away":"HOU","day":"Sunday","home":"JAX","kickoff":"2026-10-18T13:30:00Z","slot":"International","week":6},"hou-lac":{"away":"HOU","day":"Sunday","home":"LAC","kickoff":"2026-11-08T21:05:00Z","slot":"Sunday Afternoon","week":9},"hou-phi":{"away":"HOU","day":"Thursday","home":"PHI","kickoff":"2026-12-25T01:15:00Z","slot":"Thursday Night","week":16},"hou-pit":{"away":"HOU","day":"Sunday","home":"PIT","kickoff":"2026-12-07T01:20:00Z","slot":"Sunday Night","week":13},"hou-ten":{"away":"HOU","day":"Sunday","home":"TEN","kickoff":"2026-10-11T17:00:00Z","slot":"Sunday Noon","week":5},"hou-wsh":{"away":"HOU","day":"Sunday","home":"WSH","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"ind-cle":{"away":"IND","day":"Sunday","home":"CLE","kickoff":"2027-01-03T18:00:00Z","slot":"Sunday Noon","week":17},"ind-hou":{"away":"IND","day":"Thursday","home":"HOU","kickoff":"2026-11-20T01:15:00Z","slot":"Thursday Night","week":11},"ind-jax":{"away":"IND","day":"Sunday","home":"JAX","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"ind-kc":{"away":"IND","day":"Sunday","home":"KC","kickoff":"2026-09-21T00:20:00Z","slot":"Sunday Night","week":2},"ind-min":{"away":"IND","day":"Sunday","home":"MIN","kickoff":"2026-10-25T17:00:00Z","slot":"Sunday Noon","week":7},"ind-phi":{"away":"IND","day":"Sunday","home":"PHI","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"ind-pit":{"away":"IND","day":"Sunday","home":"PIT","kickoff":"2026-10-11T17:00:00Z","slot":"Sunday Noon","week":5},"ind-ten":{"away":"IND","day":"Sunday","home":"TEN","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"ind-wsh":{"away":"IND","day":"Sunday","home":"WSH","kickoff":"2026-10-04T13:30:00Z","slot":"International","week":4},"jax-bal":{"away":"JAX","day":"Thursday","home":"BAL","kickoff":"2026-11-06T01:15:00Z","slot":"Thursday Night","week":9},"jax-chi":{"away":"JAX","day":"Sunday","home":"CHI","kickoff":"2026-12-06T18:00:00Z","slot":"Sunday Noon","week":13},"jax-cin":{"away":"JAX","day":"Sunday","home":"CIN","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"jax-dal":{"away":"JAX","day":"Sunday","home":"DAL","kickoff":"2026-12-28T01:20:00Z","slot":"Sunday Night","week":16},"jax-den":{"away":"JAX","day":"Sunday","home":"DEN","kickoff":"2026-09-20T20:05:00Z","slot":"Sunday Afternoon","week":2},"jax-hou":{"away":"JAX","day":"Sunday","home":"HOU","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"jax-ind":{"away":"JAX","home":"IND","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"jax-nyg":{"away":"JAX","day":"Sunday","home":"NYG","kickoff":"2026-11-22T18:00:00Z","slot":"Sunday Noon","week":11},"jax-ten":{"away":"JAX","day":"Sunday","home":"TEN","kickoff":"2026-11-15T18:00:00Z","slot":"Sunday Noon","week":10},"kc-atl":{"away":"KC","day":"Sunday","home":"ATL","kickoff":"2026-11-15T18:00:00Z","slot":"Sunday Noon","week":10},"kc-buf":{"away":"KC","day":"Thursday","home":"BUF","kickoff":"2026-11-27T01:20:00Z","slot":"Thursday Night","week":12},"kc-cin":{"away":"KC","day":"Sunday","home":"CIN","kickoff":"2026-12-13T21:25:00Z","slot":"Sunday Afternoon","week":14},"kc-den":{"away":"KC","day":"Sunday","home":"DEN","kickoff":"2026-11-01T21:25:00Z","slot":"Sunday Afternoon","week":8},"kc-lac":{"away":"KC","home":"LAC","kickoff":"2027-01-03T05:00:00Z","tbd":true,"week":17},"kc-lar":{"away":"KC","day":"Thursday","home":"LAR","kickoff":"2026-12-04T01:15:00Z","slot":"Thursday Night","week":13},"kc-lv":{"away":"KC","day":"Sunday","home":"LV","kickoff":"2026-10-04T20:25:00Z","slot":"Sunday Afternoon","week":4},"kc-mia":{"away":"KC","day":"Sunday","home":"MIA","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"kc-sea":{"away":"KC","day":"Sunday","home":"SEA","kickoff":"2026-10-26T00:20:00Z","slot":"Sunday Night","week":7},"lac-bal":{"away":"LAC","day":"Monday","home":"BAL","kickoff":"2026-11-17T01:15:00Z","slot":"Monday Night","week":10},"lac-buf":{"away":"LAC","day":"Sunday","home":"BUF","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"lac-den":{"away":"LAC","home":"DEN","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"lac-kc":{"away":"LAC","day":"Sunday","home":"KC","kickoff":"2026-10-18T20:25:00Z","slot":"Sunday Afternoon","week":6},"lac-lar":{"away":"LAC","day":"Sunday","home":"LAR","kickoff":"2026-11-01T21:05:00Z","slot":"Sunday Afternoon","week":8},"lac-lv":{"away":"LAC","day":"Sunday","home":"LV","kickoff":"2026-12-13T21:05:00Z","slot":"Sunday Afternoon","week":14},"lac-mia":{"away":"LAC","day":"Sunday","home":"MIA","kickoff":"2026-12-27T18:00:00Z","slot":"Sunday Noon","week":16},"lac-sea":{"away":"LAC","day":"Sunday","home":"SEA","kickoff":"2026-10-04T20:25:00Z","slot":"Sunday Afternoon","week":4},"lac-tb":{"away":"LAC","day":"Sunday","home":"TB","kickoff":"2026-12-06T18:00:00Z","slot":"Sunday Noon","week":13},"lar-ari":{"away":"LAR","day":"Sunday","home":"ARI","kickoff":"2026-11-15T21:05:00Z","slot":"Sunday Afternoon","week":10},"lar-den":{"away":"LAR","day":"Sunday","home":"DEN","kickoff":"2026-09-28T00:20:00Z","slot":"Sunday Night","week":3},"lar-lv":{"away":"LAR","day":"Sunday","home":"LV","kickoff":"2026-10-25T20:25:00Z","slot":"Sunday Afternoon","week":7},"lar-phi":{"away":"LAR","day":"Sunday","home":"PHI","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"lar-sea":{"away":"LAR","day":"Friday","home":"SEA","kickoff":"2026-12-26T01:15:00Z","slot":"Friday Night","week":16},"lar-sf":{"away":"LAR","day":"Sunday","home":"SF","kickoff":"2026-12-13T21:25:00Z","slot":"Sunday Afternoon","week":14},"lar-tb":{"away":"LAR","home":"TB","kickoff":"2027-01-03T05:00:00Z","tbd":true,"week":17},"lar-wsh":{"away":"LAR","day":"Sunday","home":"WSH","kickoff":"2026-11-08T18:00:00Z","slot":"Sunday Noon","week":9},"lv-ari":{"away":"LV","day":"Sunday","home":"ARI","kickoff":"2027-01-03T21:05:00Z","slot":"Sunday Afternoon","week":17},"lv-cle":{"away":"LV","day":"Sunday","home":"CLE","kickoff":"2026-11-29T18:00:00Z","slot":"Sunday Noon","week":12},"lv-den":{"away":"LV","day":"Sunday","home":"DEN","kickoff":"2026-11-22T21:25:00Z","slot":"Sunday Afternoon","week":11},"lv-kc":{"away":"LV","home":"KC","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"lv-lac":{"away":"LV","day":"Sunday","home":"LAC","kickoff":"2026-09-20T20:05:00Z","slot":"Sunday Afternoon","week":2},"lv-ne":{"away":"LV","day":"Sunday","home":"NE","kickoff":"2026-10-11T17:00:00Z","slot":"Sunday Noon","week":5},"lv-no":{"away":"LV","day":"Sunday","home":"NO","kickoff":"2026-09-27T20:25:00Z","slot":"Sunday Afternoon","week":3},"lv-nyj":{"away":"LV","day":"Sunday","home":"NYJ","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"lv-sf":{"away":"LV","day":"Sunday","home":"SF","kickoff":"2026-11-08T21:05:00Z","slot":"Sunday Afternoon","week":9},"mia-buf":{"away":"MIA","day":"Sunday","home":"BUF","kickoff":"2026-11-22T18:00:00Z","slot":"Sunday Noon","week":11},"mia-den":{"away":"MIA","day":"Sunday","home":"DEN","kickoff":"2026-12-06T21:05:00Z","slot":"Sunday Afternoon","week":13},"mia-gb":{"away":"MIA","day":"Sunday","home":"GB","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"mia-ind":{"away":"MIA","day":"Sunday","home":"IND","kickoff":"2026-11-15T18:00:00Z","slot":"Sunday Noon","week":10},"mia-lv":{"away":"MIA","day":"Sunday","home":"LV","kickoff":"2026-09-13T20:25:00Z","slot":"Sunday Afternoon","week":1},"mia-min":{"away":"MIA","day":"Sunday","home":"MIN","kickoff":"2026-10-04T20:05:00Z","slot":"Sunday Afternoon","week":4},"mia-ne":{"away":"MIA","home":"NE","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"mia-nyj":{"away":"MIA","day":"Sunday","home":"NYJ","kickoff":"2026-10-25T17:00:00Z","slot":"Sunday Noon","week":7},"mia-sf":{"away":"MIA","day":"Sunday","home":"SF","kickoff":"2026-09-20T20:25:00Z","slot":"Sunday Afternoon","week":2},"min-chi":{"away":"MIN","day":"Sunday","home":"CHI","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"min-det":{"away":"MIN","day":"Sunday","home":"DET","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"min-gb":{"away":"MIN","day":"Sunday","home":"GB","kickoff":"2026-11-15T18:00:00Z","slot":"Sunday Noon","week":10},"min-ne":{"away":"MIN","day":"Thursday","home":"NE","kickoff":"2026-12-11T01:15:00Z","slot":"Thursday Night","week":14},"min-no":{"away":"MIN","day":"Sunday","home":"NO","kickoff":"2026-10-11T17:00:00Z","slot":"Sunday Noon","week":5},"min-nyj":{"away":"MIN","day":"Sunday","home":"NYJ","kickoff":"2027-01-03T18:00:00Z","slot":"Sunday Noon","week":17},"min-sf":{"away":"MIN","day":"Sunday","home":"SF","kickoff":"2026-11-23T01:20:00Z","slot":"International","week":11},"min-tb":{"away":"MIN","day":"Sunday","home":"TB","kickoff":"2026-09-27T20:05:00Z","slot":"Sunday Afternoon","week":3},"ne-buf":{"away":"NE","day":"Sunday","home":"BUF","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"ne-chi":{"away":"NE","day":"Thursday","home":"CHI","kickoff":"2026-10-23T00:15:00Z","slot":"Thursday Night","week":7},"ne-det":{"away":"NE","day":"Sunday","home":"DET","kickoff":"2026-11-15T14:30:00Z","slot":"International","week":10},"ne-jax":{"away":"NE","day":"Sunday","home":"JAX","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"ne-kc":{"away":"NE","day":"Monday","home":"KC","kickoff":"2026-12-22T01:15:00Z","slot":"Monday Night","week":15},"ne-lac":{"away":"NE","day":"Sunday","home":"LAC","kickoff":"2026-11-30T01:20:00Z","slot":"Sunday Night","week":12},"ne-mia":{"away":"NE","day":"Sunday","home":"MIA","kickoff":"2026-11-01T21:25:00Z","slot":"Sunday Afternoon","week":8},"ne-nyj":{"away":"NE","day":"Sunday","home":"NYJ","kickoff":"2026-12-27T18:00:00Z","slot":"Sunday Noon","week":16},"ne-sea":{"away":"NE","day":"Wednesday","home":"SEA","kickoff":"2026-09-10T00:20:00Z","slot":"Wednesday","week":1},"no-atl":{"away":"NO","day":"Sunday","home":"ATL","kickoff":"2027-01-03T18:00:00Z","slot":"Sunday Noon","week":17},"no-bal":{"away":"NO","day":"Sunday","home":"BAL","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"no-car":{"away":"NO","day":"Sunday","home":"CAR","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"no-chi":{"away":"NO","day":"Sunday","home":"CHI","kickoff":"2026-11-22T18:00:00Z","slot":"Sunday Noon","week":11},"no-cin":{"away":"NO","day":"Sunday","home":"CIN","kickoff":"2026-11-29T18:00:00Z","slot":"Sunday Noon","week":12},"no-det":{"away":"NO","day":"Sunday","home":"DET","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"no-nyg":{"away":"NO","day":"Sunday","home":"NYG","kickoff":"2026-10-18T17:00:00Z","slot":"Sunday Noon","week":6},"no-tb":{"away":"NO","day":"Sunday","home":"TB","kickoff":"2026-12-20T18:00:00Z","slot":"Sunday Noon","week":15},"nyg-dal":{"away":"NYG","day":"Sunday","home":"DAL","kickoff":"2027-01-03T18:00:00Z","slot":"Sunday Noon","week":17},"nyg-det":{"away":"NYG","day":"Monday","home":"DET","kickoff":"2026-12-29T01:15:00Z","slot":"Monday Night","week":16},"nyg-hou":{"away":"NYG","day":"Sunday","home":"HOU","kickoff":"2026-10-25T17:00:00Z","slot":"Sunday Noon","week":7},"nyg-ind":{"away":"NYG","day":"Sunday","home":"IND","kickoff":"2026-11-29T18:00:00Z","slot":"Sunday Noon","week":12},"nyg-lar":{"away":"NYG","day":"Monday","home":"LAR","kickoff":"2026-09-22T00:15:00Z","slot":"Monday Night","week":2},"nyg-phi":{"away":"NYG","day":"Sunday","home":"PHI","kickoff":"2026-11-08T18:00:00Z","slot":"Sunday Noon","week":9},"nyg-sea":{"away":"NYG","day":"Sunday","home":"SEA","kickoff":"2026-12-13T21:25:00Z","slot":"Sunday Afternoon","week":14},"nyg-wsh":{"away":"NYG","day":"Sunday","home":"WSH","kickoff":"2026-10-11T17:00:00Z","slot":"Sunday Noon","week":5},"nyj-ari":{"away":"NYJ","day":"Sunday","home":"ARI","kickoff":"2026-12-20T21:05:00Z","slot":"Sunday Afternoon","week":15},"nyj-buf":{"away":"NYJ","home":"BUF","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"nyj-chi":{"away":"NYJ","day":"Sunday","home":"CHI","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"nyj-det":{"away":"NYJ","day":"Sunday","home":"DET","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"nyj-kc":{"away":"NYJ","day":"Sunday","home":"KC","kickoff":"2026-11-08T18:00:00Z","slot":"Sunday Noon","week":9},"nyj-lac":{"away":"NYJ","day":"Sunday","home":"LAC","kickoff":"2026-11-22T21:05:00Z","slot":"Sunday Afternoon","week":11},"nyj-mia":{"away":"NYJ","day":"Sunday","home":"MIA","kickoff":"2026-11-29T18:00:00Z","slot":"Sunday Noon","week":12},"nyj-ne":{"away":"NYJ","day":"Sunday","home":"NE","kickoff":"2026-10-18T17:00:00Z","slot":"Sunday Noon","week":6},"nyj-ten":{"away":"NYJ","day":"Sunday","home":"TEN","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"phi-ari":{"away":"PHI","day":"Sunday","home":"ARI","kickoff":"2026-12-06T21:05:00Z","slot":"Sunday Afternoon","week":13},"phi-chi":{"away":"PHI","day":"Monday","home":"CHI","kickoff":"2026-09-29T00:15:00Z","slot":"Monday Night","week":3},"phi-dal":{"away":"PHI","day":"Thursday","home":"DAL","kickoff":"2026-11-26T21:30:00Z","slot":"Thursday Afternoon","week":12},"phi-jax":{"away":"PHI","day":"Sunday","home":"JAX","kickoff":"2026-10-11T13:30:00Z","slot":"International","week":5},"phi-nyg":{"away":"PHI","home":"NYG","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"phi-sf":{"away":"PHI","day":"Sunday","home":"SF","kickoff":"2027-01-04T01:20:00Z","slot":"Sunday Night","week":17},"phi-ten":{"away":"PHI","day":"Sunday","home":"TEN","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"phi-wsh":{"away":"PHI","day":"Sunday","home":"WSH","kickoff":"2026-11-02T01:20:00Z","slot":"Sunday Night","week":8},"pit-bal":{"away":"PIT","home":"BAL","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"pit-cin":{"away":"PIT","day":"Sunday","home":"CIN","kickoff":"2026-11-16T01:20:00Z","slot":"Sunday Night","week":10},"pit-cle":{"away":"PIT","day":"Thursday","home":"CLE","kickoff":"2026-10-02T00:15:00Z","slot":"Thursday Night","week":4},"pit-jax":{"away":"PIT","day":"Monday","home":"JAX","kickoff":"2026-12-15T01:15:00Z","slot":"Monday Night","week":14},"pit-ne":{"away":"PIT","day":"Sunday","home":"NE","kickoff":"2026-09-20T17:00:00Z","slot":"Sunday Noon","week":2},"pit-no":{"away":"PIT","day":"Sunday","home":"NO","kickoff":"2026-10-25T13:30:00Z","slot":"International","week":7},"pit-phi":{"away":"PIT","day":"Sunday","home":"PHI","kickoff":"2026-11-22T21:25:00Z","slot":"Sunday Afternoon","week":11},"pit-tb":{"away":"PIT","day":"Sunday","home":"TB","kickoff":"2026-10-18T17:00:00Z","slot":"Sunday Noon","week":6},"pit-ten":{"away":"PIT","day":"Sunday","home":"TEN","kickoff":"2027-01-03T18:00:00Z","slot":"Sunday Noon","week":17},"sea-ari":{"away":"SEA","day":"Sunday","home":"ARI","kickoff":"2026-09-20T20:25:00Z","slot":"Sunday Afternoon","week":2},"sea-car":{"away":"SEA","day":"Sunday","home":"CAR","kickoff":"2027-01-03T18:00:00Z","slot":"Sunday Noon","week":17},"sea-den":{"away":"SEA","day":"Thursday","home":"DEN","kickoff":"2026-10-16T00:15:00Z","slot":"Thursday Night","week":6},"sea-lar":{"away":"SEA","home":"LAR","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"sea-lv":{"away":"SEA","day":"Sunday","home":"LV","kickoff":"2026-11-15T21:05:00Z","slot":"Sunday Afternoon","week":10},"sea-phi":{"away":"SEA","day":"Saturday","home":"PHI","kickoff":"2026-12-19T22:00:00Z","slot":"Saturday Afternoon","week":15},"sea-sf":{"away":"SEA","day":"Sunday","home":"SF","kickoff":"2026-11-29T21:25:00Z","slot":"Sunday Afternoon","week":12},"sea-wsh":{"away":"SEA","day":"Sunday","home":"WSH","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"sf-ari":{"away":"SF","home":"ARI","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"sf-atl":{"away":"SF","day":"Sunday","home":"ATL","kickoff":"2026-10-25T17:00:00Z","slot":"Sunday Noon","week":7},"sf-dal":{"away":"SF","day":"Sunday","home":"DAL","kickoff":"2026-11-15T21:25:00Z","slot":"Sunday Afternoon","week":10},"sf-kc":{"away":"SF","day":"Sunday","home":"KC","kickoff":"2026-12-27T21:25:00Z","slot":"Sunday Afternoon","week":16},"sf-lac":{"away":"SF","day":"Thursday","home":"LAC","kickoff":"2026-12-18T01:15:00Z","slot":"Thursday Night","week":15},"sf-lar":{"away":"SF","day":"Thursday","home":"LAR","kickoff":"2026-09-11T00:35:00Z","slot":"International","week":1},"sf-nyg":{"away":"SF","day":"Sunday","home":"NYG","kickoff":"2026-12-06T18:00:00Z","slot":"Sunday Noon","week":13},"sf-sea":{"away":"SF","day":"Sunday","home":"SEA","kickoff":"2026-10-11T20:25:00Z","slot":"Sunday Afternoon","week":5},"tb-atl":{"away":"TB","home":"ATL","kickoff":"2026-12-27T05:00:00Z","tbd":true,"week":16},"tb-bal":{"away":"TB","day":"Sunday","home":"BAL","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"tb-car":{"away":"TB","day":"Sunday","home":"CAR","kickoff":"2026-10-25T17:00:00Z","slot":"Sunday Noon","week":7},"tb-chi":{"away":"TB","day":"Sunday","home":"CHI","kickoff":"2026-11-09T01:20:00Z","slot":"Sunday Night","week":9},"tb-cin":{"away":"TB","day":"Sunday","home":"CIN","kickoff":"2026-09-13T17:00:00Z","slot":"Sunday Noon","week":1},"tb-dal":{"away":"TB","day":"Thursday","home":"DAL","kickoff":"2026-10-09T00:15:00Z","slot":"Thursday Night","week":5},"tb-det":{"away":"TB","day":"Sunday","home":"DET","kickoff":"2026-11-22T18:00:00Z","slot":"Sunday Noon","week":11},"tb-no":{"away":"TB","home":"NO","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"ten-bal":{"away":"TEN","day":"Sunday","home":"BAL","kickoff":"2026-10-04T17:00:00Z","slot":"Sunday Noon","week":4},"ten-cin":{"away":"TEN","day":"Sunday","home":"CIN","kickoff":"2026-11-01T18:00:00Z","slot":"Sunday Noon","week":8},"ten-dal":{"away":"TEN","day":"Sunday","home":"DAL","kickoff":"2026-11-22T18:00:00Z","slot":"Sunday Noon","week":11},"ten-det":{"away":"TEN","day":"Sunday","home":"DET","kickoff":"2026-12-13T18:00:00Z","slot":"Sunday Noon","week":14},"ten-hou":{"away":"TEN","home":"HOU","kickoff":"2027-01-10T05:00:00Z","tbd":true,"week":18},"ten-ind":{"away":"TEN","day":"Sunday","home":"IND","kickoff":"2026-10-18T17:00:00Z","slot":"Sunday Noon","week":6},"ten-jax":{"away":"TEN","day":"Sunday","home":"JAX","kickoff":"2026-11-29T21:05:00Z","slot":"Sunday Afternoon","week":12},"ten-lv":{"away":"TEN","day":"Sunday","home":"LV","kickoff":"2026-12-27T21:05:00Z","slot":"Sunday Afternoon","week":16},"ten-nyg":{"away":"TEN","day":"Sunday","home":"NYG","kickoff":"2026-09-27T17:00:00Z","slot":"Sunday Noon","week":3},"wsh-ari":{"away":"WSH","day":"Sunday","home":"ARI","kickoff":"2026-11-29T21:25:00Z","slot":"Sunday Afternoon","week":12},"wsh-dal":{"away":"WSH","day":"Sunday","home":"DAL","kickoff":"2026-09-20T20:25:00Z","slot":"Sunday Afternoon","week":2},"wsh-jax":{"away":"WSH","home":"JAX","kickoff":"2027-01-03T05:00:00Z","tbd":true,"week":17},"wsh-min":{"away":"WSH","home":"MIN","kickoff":"2026-12-27T05:00:00Z","tbd":true,"week":16},"wsh-nyg":{"away":"WSH","day":"Thursday","home":"NYG","kickoff":"2026-11-13T01:15:00Z","slot":"Thursday Night","week":10},"wsh-phi":{"away":"WSH","day":"Sunday","home":"PHI","kickoff":"2026-09-13T20:25:00Z","slot":"Sunday Afternoon","week":1},"wsh-sf":{"away":"WSH","day":"Monday","home":"SF","kickoff":"2026-10-20T00:15:00Z","slot":"Monday Night","week":6},"wsh-ten":{"away":"WSH","day":"Sunday","home":"TEN","kickoff":"2026-12-06T18:00:00Z","slot":"Sunday Noon","week":13}},"generated":"2026-09-22T13:15:34Z","season":2026,"teams":{"49ers":"SF","ari":"ARI","arizona":"ARI","arizona-cardinals":"ARI","arz":"ARI","atl":"ATL","atlanta":"ATL","atlanta-falcons":"ATL","bal":"BAL","baltimore":"BAL","baltimore-ravens":"BAL","bears":"CHI","bengals":"CIN","bills":"BUF","blt":"BAL","broncos":"DEN","browns":"CLE","buccaneers":"TB","bucs":"TB","buf":"BUF","buffalo":"BUF","buffalo-bills":"BUF","car":"CAR","cardinals":"ARI","carolina":"CAR","carolina-panthers":"CAR","chargers":"LAC","chi":"CHI","chicago":"CHI","chicago-bears":"CHI","chiefs":"KC","cin":"CIN","cincinnati":"CIN","cincinnati-bengals":"CIN","cle":"CLE","cleveland":"CLE","cleveland-browns":"CLE","clv":"CLE","colts":"IND","commanders":"WSH","cowboys":"DAL","dal":"DAL","dallas":"DAL","dallas-cowboys":"DAL","den":"DEN","denver":"DEN","denver-broncos":"DEN","det":"DET","detroit":"DET","detroit-lions":"DET","dolphins":"MIA","eagles":"PHI","falcons":"ATL","gb":"GB","giants":"NYG","gnb":"GB","green-bay":"GB","green-bay-packers":"GB","hou":"HOU","houston":"HOU","houston-texans":"HOU","hst":"HOU","ind":"IND","indianapolis":"IND","indianapolis-colts":"IND","jac":"JAX","jacksonville":"JAX","jacksonville-jaguars":"JAX","jaguars":"JAX","jax":"JAX","jets":"NYJ","kan":"KC","kansas-city":"KC","kansas-city-chiefs":"KC","kc":"KC","l-a-chargers":"LAC","l-a-rams":"LAR","la-chargers":"LAC","la-rams":"LAR","lac":"LAC","lar":"LAR","las-vegas":"LV","las-vegas-raiders":"LV","lions":"DET","los-angeles-chargers":"LAC","los-angeles-rams":"LAR","lv":"LV","lvr":"LV","mia":"MIA","miami":"MIA","miami-dolphins":"MIA","min":"MIN","minnesota":"MIN","minnesota-vikings":"MIN","n-y-giants":"NYG","n-y-jets":"NYJ","ne":"NE","new-england":"NE","new-england-patriots":"NE","new-orleans":"NO","new-orleans-saints":"NO","new-york-giants":"NYG","new-york-jets":"NYJ","niners":"SF","no":"NO","nor":"NO","nwe":"NE","ny-giants":"NYG","ny-jets":"NYJ","nyg":"NYG","nyj":"NYJ","packers":"GB","panthers":"CAR","patriots":"NE","phi":"PHI","philadelphia":"PHI","philadelphia-eagles":"PHI","pit":"PIT","pittsburgh":"PIT","pittsburgh-steelers":"PIT","raiders":"LV","rams":"LAR","ravens":"BAL","saints":"NO","san-francisco":"SF","san-francisco-49ers":"SF","sea":"SEA","seahawks":"SEA","seattle":"SEA","seattle-seahawks":"SEA","sf":"SF","sfo":"SF","steelers":"PIT","tam":"TB","tampa-bay":"TB","tampa-bay-buccaneers":"TB","tb":"TB","ten":"TEN","tennessee":"TEN","tennessee-titans":"TEN","texans":"HOU","titans":"TEN","vikings":"MIN","was":"WSH","washington":"WSH","washington-commanders":"WSH","washington-football-team":"WSH","wsh":"WSH"}};
+/*
+ * order-games.js — put a week's games in real kickoff order.
+ *
+ * THE PROBLEM: the commissioner's PDF carries no kickoff times. Games come off
+ * the sheet in whatever order they were typed, so a Sunday slate lands with the
+ * night game third and the noon games scattered around it. Every tab then shows
+ * that order, and so does the message Peter pastes back to the commissioner.
+ *
+ * The times themselves are baked in at build time (lib/schedule-<season>.json,
+ * from tools/fetch_schedule.py) because the published page runs in a sandbox
+ * that blocks every outbound request — it cannot ask ESPN anything at runtime.
+ *
+ * Matching the two up is the fiddly part. The PDF writes "LA Rams", "NY Jets",
+ * "Washington"; ESPN writes "Los Angeles Rams", "New York Jets", "Washington
+ * Commanders". So the schedule ships an alias table, slug -> abbreviation, and
+ * both sides of a matchup go through it before the lookup.
+ *
+ * Everything below degrades rather than breaks. A game the schedule has never
+ * heard of — a team renamed, a typo in the review table, a kickoff ESPN hasn't
+ * set yet — keeps the position the PDF gave it instead of being dropped or flung
+ * to the end. Ordering a slate is worth doing; it is not worth losing a game
+ * over.
+ */
+
+// The NFL week runs Wednesday through Monday, not Monday through Sunday: both
+// the 2026 opener and the Thanksgiving-eve game kick on a Wednesday, and they
+// open their week rather than closing it. Only used for games the schedule
+// doesn't cover — a real kickoff outranks this every time.
+var DAY_ORDER = {
+  wednesday: -1, thursday: 0, friday: 1, saturday: 2,
+  sunday: 3, monday: 4, tuesday: 5,
+};
+
+/** Byte-for-byte the slug() in parse-lines.js — the two have to agree. */
+function slug(s) {
+  return (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+/** A PDF team name -> the abbreviation the schedule is keyed by. */
+function teamCode(name, teams) {
+  var s = slug(name);
+  return (teams && teams[s]) || s;
+}
+
+/**
+ * The schedule record for a parsed game, or null.
+ * Records with `tbd` are returned: ESPN knows about the game, it just hasn't
+ * fixed a kickoff. Callers check `.tbd` before trusting the time.
+ */
+function scheduleFor(game, schedule) {
+  if (!game || !schedule || !schedule.games) return null;
+  // slug() over the joined pair, exactly as fetch_schedule.py builds the key —
+  // the alias table answers in upper case ("GB") and the keys are lower ("gb-wsh").
+  var key = slug(teamCode(game.away, schedule.teams) + "-" +
+                 teamCode(game.home, schedule.teams));
+  return schedule.games[key] || null;
+}
+
+/** Whether a record carries a kickoff worth sorting on. */
+function isTimed(rec) {
+  return !!(rec && !rec.tbd && rec.kickoff);
+}
+
+/**
+ * Which day a game belongs to on screen.
+ *
+ * The schedule wins when it has a confirmed kickoff — that is what makes a game
+ * flexed out of the Sunday afternoon window show up under Monday instead of
+ * sitting in the wrong section. Otherwise the PDF's own day stands.
+ */
+function effectiveDay(game, schedule) {
+  var rec = scheduleFor(game, schedule);
+  if (isTimed(rec) && rec.day) return rec.day;
+  return (game && game.day) || "";
+}
+
+/** The Sunday Noon / Sunday Night style label, or "" when it isn't known. */
+function slotOf(game, schedule) {
+  var rec = scheduleFor(game, schedule);
+  return isTimed(rec) && rec.slot ? rec.slot : "";
+}
+
+function dayRank(day) {
+  var k = String(day || "").trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(DAY_ORDER, k) ? DAY_ORDER[k] : null;
+}
+
+/**
+ * A week's games in kickoff order. Returns a new array; the input is untouched.
+ *
+ * Three keys, in order:
+ *   1. day — so the day headings stay contiguous and come out Thu -> Mon even
+ *      when a game's own kickoff is unknown;
+ *   2. kickoff;
+ *   3. the order the PDF had, which breaks every remaining tie.
+ */
+function orderGames(games, schedule) {
+  var list = (games || []).map(function (g, i) {
+    var rec = scheduleFor(g, schedule);
+    var timed = isTimed(rec);
+    return {
+      g: g,
+      i: i,
+      dayRank: dayRank((timed && rec.day) || (g && g.day) || ""),
+      t: timed ? Date.parse(rec.kickoff) : null,
+      // -1 / 0 / +1: sorts a borrowed time just before or just after the game it
+      // was borrowed from, instead of colliding with it and falling back to
+      // index order across the whole day.
+      phase: 0,
+    };
+  });
+  var i, j;
+
+  // A game with no recognisable day sits under whichever heading it was printed
+  // beneath — the same carry-forward the day headings on the page already do.
+  for (i = 0; i < list.length; i++) {
+    if (list[i].dayRank !== null) continue;
+    for (j = i - 1; j >= 0; j--) {
+      if (list[j].dayRank !== null) { list[i].dayRank = list[j].dayRank; break; }
+    }
+  }
+  for (i = list.length - 1; i >= 0; i--) {
+    if (list[i].dayRank !== null) continue;
+    for (j = i + 1; j < list.length; j++) {
+      if (list[j].dayRank !== null) { list[i].dayRank = list[j].dayRank; break; }
+    }
+  }
+  for (i = 0; i < list.length; i++) {
+    if (list[i].dayRank === null) list[i].dayRank = 0;   // no days anywhere
+  }
+
+  // Games the schedule can't time borrow the kickoff of the nearest game beside
+  // them on the sheet, within their own day. That is what keeps an unmatched
+  // game in its relative position rather than herding every unknown to one end.
+  for (i = 0; i < list.length; i++) {
+    if (list[i].t !== null) continue;
+    var src = null, phase = 0;
+    for (j = i - 1; j >= 0; j--) {
+      if (list[j].t !== null && list[j].dayRank === list[i].dayRank) {
+        src = list[j].t; phase = 1; break;
+      }
+    }
+    if (src === null) {
+      for (j = i + 1; j < list.length; j++) {
+        if (list[j].t !== null && list[j].dayRank === list[i].dayRank) {
+          src = list[j].t; phase = -1; break;
+        }
+      }
+    }
+    // Still null means nothing in this day has a kickoff at all; the whole group
+    // then falls through to PDF order, which is the best answer available.
+    list[i].t = src;
+    list[i].phase = src === null ? 0 : phase;
+  }
+
+  list.sort(function (a, b) {
+    if (a.dayRank !== b.dayRank) return a.dayRank - b.dayRank;
+    var at = a.t === null ? 0 : a.t;
+    var bt = b.t === null ? 0 : b.t;
+    if (at !== bt) return at - bt;
+    if (a.phase !== b.phase) return a.phase - b.phase;
+    return a.i - b.i;
+  });
+  return list.map(function (e) { return e.g; });
+}
+
+/**
+ * Games the schedule has never heard of, for the review table to flag.
+ *
+ * This is the only signal that a team name has drifted — the ordering itself
+ * fails quietly by design, so without this a misspelt "Jaguars" would just sit
+ * in the wrong place forever and nobody would know why.
+ */
+function unscheduled(games, schedule) {
+  if (!schedule || !schedule.games) return [];
+  return (games || []).filter(function (g) { return !scheduleFor(g, schedule); });
+}
+
+var API = {
+  orderGames, scheduleFor, effectiveDay, slotOf, unscheduled,
+  _internals: { slug, teamCode, dayRank, DAY_ORDER },
+};
+
+if (typeof window !== "undefined") window.PickemSchedule = API;
+
 </script>
 <script>
 (function () {
   "use strict";
   var P = window.PickemParser;
+  var S = window.PickemSchedule;
+  var SCHEDULE = window.SCHEDULE || null;
   var PEOPLE = ["Peter", "Dalton", "Hunter"];
   var COMMISSIONER = "Brian";
   // Your name is the password: one field that both lets you in and says who you
@@ -1022,7 +1218,35 @@ if (typeof window !== "undefined") window.PickemParser = API;
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  function gamesFor(w) { return (state.weeks[w] || {}).games || []; }
+  // The commissioner's PDF has no kickoff times, so the games come off it in
+  // whatever order they were typed. Everything that lists a week goes through
+  // here, which means Home, Picks, Scores and the message to the commissioner
+  // all show the same order — the real one. Ordering is pure and cheap on a
+  // sixteen-game slate, so there's nothing to cache.
+  function gamesFor(w) {
+    return S.orderGames((state.weeks[w] || {}).games || [], SCHEDULE);
+  }
+  /** Which day heading a game sits under: the schedule's, or the PDF's. */
+  function dayOf(g) { return S.effectiveDay(g, SCHEDULE); }
+
+  /**
+   * Warn about games the baked schedule can't find.
+   *
+   * They still save and still work — they just keep the order the PDF gave
+   * them. Without this the only symptom of a team name the schedule doesn't
+   * recognise is a game sitting in a slightly odd place, which nobody would
+   * ever trace back to a spelling.
+   */
+  function flagUnscheduled(draft) {
+    var miss = S.unscheduled(draft.games || [], SCHEDULE);
+    if (!miss.length) return;
+    draft.warnings = (draft.warnings || []).concat(
+      miss.map(function (g) {
+        return "No kickoff time found for “" + g.away + " at " + g.home +
+          "” — check the team names. It'll still save, but it stays " +
+          "in the order the PDF had it.";
+      }));
+  }
   function picksFor(w) { return state.picks[w] || {}; }
   function scoresFor(w) { return state.scores[w] || {}; }
   function pickOf(w, person, gid) { return ((picksFor(w)[person] || {})[gid]) || null; }
@@ -1125,11 +1349,12 @@ if (typeof window !== "undefined") window.PickemParser = API;
 
     var day = null;
     gs.forEach(function (g) {
-      if (g.day && g.day !== day) {
+      var gday = dayOf(g);
+      if (gday && gday !== day) {
         if (day !== null) h += "</div>";
-        day = g.day;
+        day = gday;
         h += '<div class="daymark">' + esc(day) + '</div><div class="hm-list">';
-      } else if (day === null && !g.day) {
+      } else if (day === null && !gday) {
         day = ""; h += '<div class="hm-list">';
       }
       var votes = votesFor(w, g.id);
@@ -1220,7 +1445,8 @@ if (typeof window !== "undefined") window.PickemParser = API;
     var day = null;
     h += '<div class="games">';
     gs.forEach(function (g) {
-      if (g.day && g.day !== day) { day = g.day; h += '<div class="daymark">' + esc(day) + "</div>"; }
+      var gday = dayOf(g);
+      if (gday && gday !== day) { day = gday; h += '<div class="daymark">' + esc(day) + "</div>"; }
       h += gameRow(w, g);
     });
     h += "</div>" + statusLine();
@@ -1310,7 +1536,8 @@ if (typeof window !== "undefined") window.PickemParser = API;
 
     var day = null;
     gs.forEach(function (g) {
-      if (g.day && g.day !== day) { day = g.day; h += '<div class="daymark">' + esc(day) + "</div>"; }
+      var gday = dayOf(g);
+      if (gday && gday !== day) { day = gday; h += '<div class="daymark">' + esc(day) + "</div>"; }
       var r = resultOf(w, g);
       var sc = scoresFor(w)[g.id];
       var line = g.favored
@@ -1675,6 +1902,7 @@ if (typeof window !== "undefined") window.PickemParser = API;
         addRow();
         note("Couldn't find any games in that PDF \u2014 enter them by hand below.");
       } else {
+        flagUnscheduled(out);
         state.draft = out;
         note("Read " + out.games.length + " games. Check the favored column before saving.");
       }
