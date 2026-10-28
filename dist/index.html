@@ -1729,6 +1729,19 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
         return pick === side ? pick : null;
       });
     }
+    // With only two sides, every game where all three have picked falls into
+    // exactly one of these four agreement patterns.
+    function agreementTally(which) {
+      return seasonTally(function (wk, g) {
+        var p = pickOf(wk, "Peter", g.id), d = pickOf(wk, "Dalton", g.id), h = pickOf(wk, "Hunter", g.id);
+        if (!p || !d || !h) return null;
+        if (which === "all") return (p === d && d === h) ? p : null;
+        if (which === "peter-hunter") return (p === h && p !== d) ? p : null;
+        if (which === "peter-dalton") return (p === d && p !== h) ? p : null;
+        if (which === "dalton-hunter") return (d === h && d !== p) ? d : null;
+        return null;
+      });
+    }
 
     function breakdownTable(title, note, rows) {
       var h = '<h3 class="trend-h">' + esc(title) + "</h3>";
@@ -1770,6 +1783,20 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
       { label: "Picked home", rec: function (p) { return pickBySide(p, "home"); } },
       { label: "Picked away", rec: function (p) { return pickBySide(p, "away"); } },
     ]);
+
+    h += '<h3 class="trend-h">Who agrees</h3>' +
+      '<p class="trend-note">The group’s combined record depending on exactly who lines up on a game.</p>' +
+      '<div class="tablewrap"><table><thead><tr><th></th><th>Record</th></tr></thead><tbody>' +
+      [
+        ["All three agree", agreementTally("all")],
+        ["Peter & Hunter (not Dalton)", agreementTally("peter-hunter")],
+        ["Peter & Dalton (not Hunter)", agreementTally("peter-dalton")],
+        ["Dalton & Hunter (not Peter)", agreementTally("dalton-hunter")],
+      ].map(function (row) {
+        return "<tr><td>" + esc(row[0]) + '</td><td class="n">' + recStr(row[1]) +
+          ' <span class="dim">' + pctStr(row[1]) + "</span></td></tr>";
+      }).join("") +
+      "</tbody></table></div>";
 
     el.innerHTML = h;
   }
