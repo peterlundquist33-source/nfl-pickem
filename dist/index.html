@@ -284,6 +284,12 @@ th{font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--di
 tbody tr:last-child td{border-bottom:0}
 tbody tr:hover{background:var(--slate-2)}
 td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dim{color:var(--dim)}
+
+/* ---------- trends ---------- */
+.trend-h{font-size:.92rem;font-weight:600;letter-spacing:-.015em;margin-top:1.9rem}
+.trend-h:first-of-type{margin-top:0}
+.trend-note{margin:.25rem 0 0;color:var(--dim);font-size:.78rem}
 
 /* ---------- lines editor ---------- */
 .drop{border:1px dashed var(--hair-strong);border-radius:var(--r);padding:1.9rem 1rem;
@@ -356,6 +362,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
       <button class="tab" role="tab" data-pane="picks" aria-selected="false">Picks</button>
       <button class="tab" role="tab" data-pane="scores" aria-selected="false">Scores</button>
       <button class="tab" role="tab" data-pane="standings" aria-selected="false">Standings</button>
+      <button class="tab" role="tab" data-pane="trends" aria-selected="false">Trends</button>
       <button class="tab" role="tab" data-pane="lines" aria-selected="false">Lines</button>
     </nav>
   </header>
@@ -365,6 +372,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
     <section id="pane-picks" hidden></section>
     <section id="pane-scores" hidden></section>
     <section id="pane-standings" hidden></section>
+    <section id="pane-trends" hidden></section>
     <section id="pane-lines" hidden></section>
   </main>
 </div>
@@ -1194,7 +1202,7 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
     sessionStorage.removeItem("c3.who");
     location.reload();
   });
-  var PANES = ["home", "picks", "scores", "standings", "lines"];
+  var PANES = ["home", "picks", "scores", "standings", "trends", "lines"];
 
   function selectTab(name) {
     state.tab = name;
@@ -1280,6 +1288,7 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
     renderPicks();
     renderScores();
     renderStandings();
+    renderTrends();
     renderLines();
   }
 
@@ -1666,6 +1675,102 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
         '<td class="n">' + graded + "/" + gs.length + "</td></tr>";
     });
     h += "</tbody></table></div>";
+    el.innerHTML = h;
+  }
+
+  /* ------------------------------------------------ trends */
+  function renderTrends() {
+    var el = document.getElementById("pane-trends");
+    var weeks = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
+    if (!weeks.length) { el.innerHTML = empty("Nothing to break down yet", "Make some picks and grade a week first."); return; }
+
+    function seasonTally(sideFor) {
+      var t = { w: 0, l: 0, p: 0 };
+      weeks.forEach(function (wk) {
+        var r = P.tally(gamesFor(wk), function (g) { return sideFor(wk, g); },
+          function (g) { return resultOf(wk, g); });
+        t.w += r.w; t.l += r.l; t.p += r.p;
+      });
+      return t;
+    }
+    // A pick'em game (no favorite printed) has no favorite/underdog side, so it's
+    // excluded from both buckets rather than silently counted as an "underdog".
+    function pickVsFavored(person, wantFavoriteSide) {
+      return seasonTally(function (wk, g) {
+        if (!g.favored) return null;
+        var pick = pickOf(wk, person, g.id);
+        if (!pick) return null;
+        var pickedFavorite = pick === g.favored;
+        return pickedFavorite === wantFavoriteSide ? pick : null;
+      });
+    }
+    function pickVsGroup(person, wantWithGroup) {
+      return seasonTally(function (wk, g) {
+        var pick = pickOf(wk, person, g.id);
+        if (!pick) return null;
+        var maj = P.majority(votesFor(wk, g.id), PEOPLE);
+        if (!maj) return null;
+        var withGroup = pick === maj;
+        return withGroup === wantWithGroup ? pick : null;
+      });
+    }
+    function pickBySpread(person, lo, hi) {
+      return seasonTally(function (wk, g) {
+        if (g.spread == null) return null;
+        var pick = pickOf(wk, person, g.id);
+        if (!pick) return null;
+        var s = Math.abs(Number(g.spread));
+        return (s >= lo && s < hi) ? pick : null;
+      });
+    }
+    function pickBySide(person, side) {
+      return seasonTally(function (wk, g) {
+        var pick = pickOf(wk, person, g.id);
+        return pick === side ? pick : null;
+      });
+    }
+
+    function breakdownTable(title, note, rows) {
+      var h = '<h3 class="trend-h">' + esc(title) + "</h3>";
+      if (note) h += '<p class="trend-note">' + esc(note) + "</p>";
+      h += '<div class="tablewrap"><table><thead><tr><th></th>' +
+        PEOPLE.map(function (p) { return "<th>" + esc(p) + "</th>"; }).join("") +
+        "</tr></thead><tbody>";
+      rows.forEach(function (row) {
+        h += "<tr><td>" + esc(row.label) + "</td>" +
+          PEOPLE.map(function (p) {
+            var r = row.rec(p);
+            return '<td class="n">' + recStr(r) + " <span class=\"dim\">" + pctStr(r) + "</span></td>";
+          }).join("") + "</tr>";
+      });
+      h += "</tbody></table></div>";
+      return h;
+    }
+
+    var h = '<div class="head"><div><h2>Trends</h2><p>Season breakdowns, ' +
+      SEASON + " — where each person's picks actually come from.</p></div></div>";
+
+    h += breakdownTable("Favorites vs. underdogs", "Pick'em games with no printed favorite are excluded from both.", [
+      { label: "Favorites", rec: function (p) { return pickVsFavored(p, true); } },
+      { label: "Underdogs", rec: function (p) { return pickVsFavored(p, false); } },
+    ]);
+
+    h += breakdownTable("With the group vs. against it", "“Against” means your pick lost out 2-1 and you took the lone side anyway.", [
+      { label: "With majority", rec: function (p) { return pickVsGroup(p, true); } },
+      { label: "Against majority", rec: function (p) { return pickVsGroup(p, false); } },
+    ]);
+
+    h += breakdownTable("By spread size", "", [
+      { label: "Close (≤3)", rec: function (p) { return pickBySpread(p, 0, 3.5); } },
+      { label: "Medium (3.5–9.5)", rec: function (p) { return pickBySpread(p, 3.5, 10); } },
+      { label: "Big (10+)", rec: function (p) { return pickBySpread(p, 10, Infinity); } },
+    ]);
+
+    h += breakdownTable("Home vs. away", "Which side of the matchup you picked, regardless of who was favored.", [
+      { label: "Picked home", rec: function (p) { return pickBySide(p, "home"); } },
+      { label: "Picked away", rec: function (p) { return pickBySide(p, "away"); } },
+    ]);
+
     el.innerHTML = h;
   }
 
