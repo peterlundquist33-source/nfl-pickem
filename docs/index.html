@@ -363,6 +363,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
       <button class="tab" role="tab" data-pane="scores" aria-selected="false">Scores</button>
       <button class="tab" role="tab" data-pane="standings" aria-selected="false">Standings</button>
       <button class="tab" role="tab" data-pane="trends" aria-selected="false">Trends</button>
+      <button class="tab" role="tab" data-pane="teamtrends" aria-selected="false">Team Trends</button>
       <button class="tab" role="tab" data-pane="lines" aria-selected="false">Lines</button>
     </nav>
   </header>
@@ -373,6 +374,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
     <section id="pane-scores" hidden></section>
     <section id="pane-standings" hidden></section>
     <section id="pane-trends" hidden></section>
+    <section id="pane-teamtrends" hidden></section>
     <section id="pane-lines" hidden></section>
   </main>
 </div>
@@ -1202,7 +1204,7 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
     sessionStorage.removeItem("c3.who");
     location.reload();
   });
-  var PANES = ["home", "picks", "scores", "standings", "trends", "lines"];
+  var PANES = ["home", "picks", "scores", "standings", "trends", "teamtrends", "lines"];
 
   function selectTab(name) {
     state.tab = name;
@@ -1289,6 +1291,7 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
     renderScores();
     renderStandings();
     renderTrends();
+    renderTeamTrends();
     renderLines();
   }
 
@@ -1798,6 +1801,64 @@ if (typeof window !== "undefined") window.PickemSchedule = API;
       }).join("") +
       "</tbody></table></div>";
 
+    el.innerHTML = h;
+  }
+
+  /* ------------------------------------------------ team trends */
+  function renderTeamTrends() {
+    var el = document.getElementById("pane-teamtrends");
+    var weeks = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
+    if (!weeks.length) { el.innerHTML = empty("Nothing to break down yet", "Upload a week and grade some games first."); return; }
+
+    var teams = {};
+    weeks.forEach(function (wk) {
+      gamesFor(wk).forEach(function (g) { teams[g.home] = true; teams[g.away] = true; });
+    });
+
+    // filter(g, side) decides whether a given game/side counts toward this split;
+    // side is "home" or "away", whichever one `team` was in that game.
+    function teamTally(team, filter) {
+      var t = { w: 0, l: 0, p: 0 };
+      weeks.forEach(function (wk) {
+        gamesFor(wk).forEach(function (g) {
+          var side = g.home === team ? "home" : (g.away === team ? "away" : null);
+          if (!side) return;
+          if (filter && !filter(g, side)) return;
+          var res = resultOf(wk, g);
+          if (!res) return;
+          if (res === "push") t.p++;
+          else if (res === side) t.w++;
+          else t.l++;
+        });
+      });
+      return t;
+    }
+    function atsPct(r) { var d = r.w + r.l; return d ? r.w / d : -1; }
+
+    var rows = Object.keys(teams).map(function (team) {
+      return {
+        team: team,
+        overall: teamTally(team, null),
+        home: teamTally(team, function (g, side) { return side === "home"; }),
+        away: teamTally(team, function (g, side) { return side === "away"; }),
+        fav: teamTally(team, function (g, side) { return g.favored === side; }),
+        dog: teamTally(team, function (g, side) { return g.favored && g.favored !== side; }),
+      };
+    });
+    rows.sort(function (a, b) { return atsPct(b.overall) - atsPct(a.overall); });
+
+    var h = '<div class="head"><div><h2>Team Trends</h2><p>Against the spread, ' +
+      SEASON + ' — every team that’s played a graded game so far. Early weeks mean small ' +
+      "samples; take it as a watchlist, not a lock.</p></div></div>";
+    h += '<div class="tablewrap"><table><thead><tr><th>Team</th><th>Overall</th>' +
+      "<th>Home</th><th>Away</th><th>Favorite</th><th>Underdog</th></tr></thead><tbody>";
+    rows.forEach(function (r) {
+      h += "<tr><td>" + esc(r.team) + "</td>" +
+        ["overall", "home", "away", "fav", "dog"].map(function (k) {
+          return '<td class="n">' + recStr(r[k]) + ' <span class="dim">' + pctStr(r[k]) + "</span></td>";
+        }).join("") + "</tr>";
+    });
+    h += "</tbody></table></div>";
     el.innerHTML = h;
   }
 
