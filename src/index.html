@@ -890,7 +890,7 @@ window.FIREBASE_CONFIG = {
       if (gday && gday !== day) { day = gday; h += '<div class="daymark">' + esc(day) + "</div>"; }
       h += gameRow(w, g);
     });
-    h += "</div>" + agreementCountsBlock() + statusLine();
+    h += "</div>" + agreementCountsBlock(w) + statusLine();
     el.innerHTML = h;
     wireWeekStrip(el);
 
@@ -955,32 +955,29 @@ window.FIREBASE_CONFIG = {
       "</div></article>";
   }
 
-  // Raw game counts by agreement pattern, every week, regardless of grading —
+  // Raw game counts by agreement pattern for one week, regardless of grading —
   // "how many games did this pair line up on" rather than how those picks did.
-  function agreementCounts() {
-    var weeks = Object.keys(state.weeks).map(Number);
+  function agreementCounts(w) {
     var c = { all: 0, "peter-dalton": 0, "peter-hunter": 0, "dalton-hunter": 0 };
-    weeks.forEach(function (wk) {
-      gamesFor(wk).forEach(function (g) {
-        var votes = votesFor(wk, g.id);
-        var p = votes.Peter, d = votes.Dalton, h = votes.Hunter;
-        if (!p || !d || !h) return;
-        if (p === d && d === h) c.all++;
-        else if (p === d) c["peter-dalton"]++;
-        else if (p === h) c["peter-hunter"]++;
-        else if (d === h) c["dalton-hunter"]++;
-      });
+    gamesFor(w).forEach(function (g) {
+      var votes = votesFor(w, g.id);
+      var p = votes.Peter, d = votes.Dalton, h = votes.Hunter;
+      if (!p || !d || !h) return;
+      if (p === d && d === h) c.all++;
+      else if (p === d) c["peter-dalton"]++;
+      else if (p === h) c["peter-hunter"]++;
+      else if (d === h) c["dalton-hunter"]++;
     });
     return c;
   }
 
-  function agreementCountsBlock() {
-    var c = agreementCounts();
+  function agreementCountsBlock(w) {
+    var c = agreementCounts(w);
     var total = c.all + c["peter-dalton"] + c["peter-hunter"] + c["dalton-hunter"];
     if (!total) return "";
     return '<div class="tablewrap" style="margin-top:1.6rem">' +
-      '<h3 class="trend-h">Who agrees — season</h3>' +
-      '<p class="trend-note">Every game this season all three of you have picked, by who lined up together.</p>' +
+      '<h3 class="trend-h">Who agrees — this week</h3>' +
+      '<p class="trend-note">Every game this week all three of you have picked, by who lined up together.</p>' +
       '<table><thead><tr><th></th><th>Games</th></tr></thead><tbody>' +
       [
         ["All three agree", c.all],
