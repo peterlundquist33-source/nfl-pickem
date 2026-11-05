@@ -890,7 +890,7 @@ window.FIREBASE_CONFIG = {
       if (gday && gday !== day) { day = gday; h += '<div class="daymark">' + esc(day) + "</div>"; }
       h += gameRow(w, g);
     });
-    h += "</div>" + statusLine();
+    h += "</div>" + agreementCountsBlock() + statusLine();
     el.innerHTML = h;
     wireWeekStrip(el);
 
@@ -953,6 +953,44 @@ window.FIREBASE_CONFIG = {
         (sc && sc.awayScore !== "" && sc.homeScore !== ""
           ? '<span class="final num">' + esc(sc.awayScore) + "\u2013" + esc(sc.homeScore) + "</span>" : "") +
       "</div></article>";
+  }
+
+  // Raw game counts by agreement pattern, every week, regardless of grading —
+  // "how many games did this pair line up on" rather than how those picks did.
+  function agreementCounts() {
+    var weeks = Object.keys(state.weeks).map(Number);
+    var c = { all: 0, "peter-dalton": 0, "peter-hunter": 0, "dalton-hunter": 0 };
+    weeks.forEach(function (wk) {
+      gamesFor(wk).forEach(function (g) {
+        var votes = votesFor(wk, g.id);
+        var p = votes.Peter, d = votes.Dalton, h = votes.Hunter;
+        if (!p || !d || !h) return;
+        if (p === d && d === h) c.all++;
+        else if (p === d) c["peter-dalton"]++;
+        else if (p === h) c["peter-hunter"]++;
+        else if (d === h) c["dalton-hunter"]++;
+      });
+    });
+    return c;
+  }
+
+  function agreementCountsBlock() {
+    var c = agreementCounts();
+    var total = c.all + c["peter-dalton"] + c["peter-hunter"] + c["dalton-hunter"];
+    if (!total) return "";
+    return '<div class="tablewrap" style="margin-top:1.6rem">' +
+      '<h3 class="trend-h">Who agrees — season</h3>' +
+      '<p class="trend-note">Every game this season all three of you have picked, by who lined up together.</p>' +
+      '<table><thead><tr><th></th><th>Games</th></tr></thead><tbody>' +
+      [
+        ["All three agree", c.all],
+        ["Peter &amp; Dalton (not Hunter)", c["peter-dalton"]],
+        ["Peter &amp; Hunter (not Dalton)", c["peter-hunter"]],
+        ["Dalton &amp; Hunter (not Peter)", c["dalton-hunter"]],
+      ].map(function (row) {
+        return "<tr><td>" + row[0] + '</td><td class="n">' + row[1] + "</td></tr>";
+      }).join("") +
+      "</tbody></table></div>";
   }
 
   /* ------------------------------------------------ scores */
