@@ -289,6 +289,51 @@ th.sortable{cursor:pointer;user-select:none;transition:color .15s var(--ease)}
 th.sortable:hover{color:var(--text)}
 th.sortable.active{color:var(--accent-hi)}
 
+/* ---------- stats popup ---------- */
+.statsbtn{display:inline-flex;align-items:center;gap:.3rem;margin-top:.1rem;
+  padding:.3rem .5rem;min-height:30px;border-radius:6px;cursor:pointer;
+  background:var(--slate-3);border:1px solid var(--hair);color:var(--muted);
+  font-size:.63rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  transition:color .15s var(--ease),border-color .15s var(--ease)}
+.statsbtn:hover{color:var(--accent-hi);border-color:var(--accent-line)}
+.statsbtn svg{width:11px;height:11px;fill:currentColor}
+@media (max-width:420px){.statsbtn span{display:none}.statsbtn{padding:.3rem .45rem}}
+
+#statsdlg{border:1px solid var(--hair-strong);border-radius:12px;padding:0;
+  background:var(--slate);color:var(--text);width:min(520px,calc(100vw - 1.6rem));
+  box-shadow:0 18px 50px rgba(0,0,0,.6)}
+#statsdlg::backdrop{background:rgba(5,7,10,.66)}
+.dlg-hd{display:flex;align-items:center;gap:.6rem;
+  padding:.85rem 1rem;border-bottom:1px solid var(--hair)}
+.dlg-hd h3{margin:0;font-size:.95rem;font-weight:600;letter-spacing:-.015em}
+.dlg-x{margin-left:auto;background:none;border:0;color:var(--muted);cursor:pointer;
+  font-size:1.35rem;line-height:1;padding:0 .2rem}
+.dlg-x:hover{color:var(--text)}
+.dlg-bd{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair)}
+@media (max-width:440px){.dlg-bd{grid-template-columns:1fr}}
+.sc{background:var(--slate);padding:.8rem .9rem}
+.sc-hd{display:flex;flex-direction:column;gap:.1rem;margin-bottom:.6rem}
+.sc-hd strong{font-size:.88rem;letter-spacing:-.01em}
+.sc-role{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.sc-splits{margin:0}
+.sc-row{display:flex;justify-content:space-between;gap:.6rem;
+  padding:.3rem .4rem;border-radius:5px;font-size:.78rem}
+.sc-row dt{color:var(--muted);margin:0}
+.sc-row dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.sc-row.on{background:var(--accent-dim);box-shadow:inset 0 0 0 1px var(--accent-line)}
+.sc-row.on dt{color:var(--accent-hi)}
+.sc-form{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;
+  margin-top:.7rem;padding-top:.6rem;border-top:1px solid var(--hair)}
+.sc-form-lbl{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.sc-pips{display:inline-flex;gap:.22rem}
+.pip{width:18px;height:18px;border-radius:4px;display:grid;place-items:center;
+  font-size:.62rem;font-weight:700;border:1px solid var(--hair)}
+.pip.win{color:var(--win);background:var(--win-dim);border-color:rgba(62,212,154,.35)}
+.pip.loss{color:var(--loss);background:var(--loss-dim);border-color:rgba(242,96,106,.35)}
+.pip.push{color:var(--push)}
+.dlg-ft{margin:0;padding:.7rem 1rem .85rem;border-top:1px solid var(--hair);
+  color:var(--dim);font-size:.72rem;line-height:1.45}
+
 /* ---------- trends ---------- */
 .trend-h{font-size:.92rem;font-weight:600;letter-spacing:-.015em;margin-top:1.9rem}
 .trend-h:first-of-type{margin-top:0}
@@ -381,6 +426,8 @@ th.sortable.active{color:var(--accent-hi)}
     <section id="pane-lines" hidden></section>
   </main>
 </div>
+
+<dialog id="statsdlg" aria-label="Against-the-spread stats"></dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-app-compat.min.js"></script>
@@ -906,6 +953,68 @@ window.FIREBASE_CONFIG = {
         savePick(w, state.me, gid, next);
       });
     });
+
+    Array.prototype.forEach.call(el.querySelectorAll(".statsbtn"), function (b) {
+      b.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();   // never let this reach a pick button
+        var g = gamesFor(w).find(function (x) { return x.id === b.dataset.stats; });
+        if (g) openStats(g);
+      });
+    });
+  }
+
+  /* ------------------------------------------------ stats popup */
+
+  var RECENT_N = 5;
+
+  function statsColumn(g, which) {
+    var team = which === "home" ? g.home : g.away;
+    var s = teamSplits(team);
+    // The two splits that actually describe this team in this game.
+    var live = { overall: false, home: which === "home", away: which === "away",
+                 fav: g.favored === which, dog: !!g.favored && g.favored !== which };
+
+    var h = '<div class="sc"><div class="sc-hd"><strong>' + esc(team) + "</strong>" +
+      '<span class="sc-role">' + (which === "home" ? "Home" : "Away") +
+      (g.favored ? (g.favored === which ? " &middot; Favorite" : " &middot; Underdog") : "") +
+      "</span></div><dl class=\"sc-splits\">";
+
+    SPLITS.forEach(function (sp) {
+      var r = s[sp.id], n = r.w + r.l + r.p;
+      h += '<div class="sc-row' + (live[sp.id] ? " on" : "") + '">' +
+        "<dt>" + esc(sp.label) + "</dt><dd>" +
+        (n ? recStr(r) + ' <span class="dim">' + pctStr(r) + "</span>"
+           : '<span class="dim">no games</span>') +
+        "</dd></div>";
+    });
+    h += "</dl>";
+
+    var form = recentForm(team, RECENT_N);
+    h += '<div class="sc-form"><span class="sc-form-lbl">Last ' + RECENT_N + "</span>";
+    if (!form.length) h += '<span class="dim">no graded games yet</span>';
+    else h += '<span class="sc-pips">' + form.map(function (f) {
+      var ch = f.result === "win" ? "W" : f.result === "loss" ? "L" : "P";
+      return '<span class="pip ' + f.result + '" title="Week ' + f.week + " " +
+        (f.at ? "at " : "vs ") + esc(f.opp) + " — " + ch + '">' + ch + "</span>";
+    }).join("") + "</span>";
+    h += "</div>";
+    return h + "</div>";
+  }
+
+  function openStats(g) {
+    var dlg = document.getElementById("statsdlg");
+    var graded = gradedWeeks().length;
+    dlg.innerHTML =
+      '<div class="dlg-hd"><h3>' + esc(g.away) + " at " + esc(g.home) + "</h3>" +
+      '<button class="dlg-x" type="button" aria-label="Close">&times;</button></div>' +
+      '<div class="dlg-bd">' + statsColumn(g, "away") + statsColumn(g, "home") + "</div>" +
+      '<p class="dlg-ft">Against the spread, ' + SEASON + " — " + graded +
+      " week" + (graded === 1 ? "" : "s") + " graded. The split matching this game is " +
+      "highlighted. Records are W‑L‑P; small samples lie.</p>";
+    dlg.querySelector(".dlg-x").addEventListener("click", function () { dlg.close(); });
+    if (typeof dlg.showModal === "function") dlg.showModal();
+    else dlg.setAttribute("open", "");          // very old browsers: inline fallback
   }
 
   function gameRow(w, g) {
@@ -945,6 +1054,16 @@ window.FIREBASE_CONFIG = {
       chips += '<span class="chip">' + Object.keys(votes).length + "/3 in</span>";
     }
 
+    // Deliberately outside .sides: the team buttons cast picks, so the stats
+    // control gets its own hit area well away from them.
+    var statsBtn = '<button class="statsbtn" type="button" data-stats="' + esc(g.id) +
+      '" aria-label="Against-the-spread stats for ' + esc(g.away) + " at " + esc(g.home) +
+      '"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">' +
+      '<rect x="1.5" y="9" width="3" height="5.5" rx="1"></rect>' +
+      '<rect x="6.5" y="5" width="3" height="9.5" rx="1"></rect>' +
+      '<rect x="11.5" y="2" width="3" height="12.5" rx="1"></rect>' +
+      "</svg><span>Stats</span></button>";
+
     return '<article class="game' + cls + '">' +
       '<div class="sides">' + side("away", g.away) + side("home", g.home) + "</div>" +
       '<div class="meta">' +
@@ -952,6 +1071,7 @@ window.FIREBASE_CONFIG = {
         '<div class="votes">' + dots + "</div>" + chips +
         (sc && sc.awayScore !== "" && sc.homeScore !== ""
           ? '<span class="final num">' + esc(sc.awayScore) + "\u2013" + esc(sc.homeScore) + "</span>" : "") +
+        statsBtn +
       "</div></article>";
   }
 
@@ -1268,10 +1388,75 @@ window.FIREBASE_CONFIG = {
     el.innerHTML = h;
   }
 
-  /* ------------------------------------------------ team trends */
+  /* ------------------------------------------------ team ATS splits
+     Shared by the Team Trends tab and the per-game stats popup on the picks
+     page, so both always report the same number for the same split. */
+
+  function gradedWeeks() {
+    return Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
+  }
+
+  // filter(g, side) decides whether a given game/side counts toward this split;
+  // side is "home" or "away", whichever one `team` was in that game.
+  function teamTally(team, filter, weeks) {
+    var t = { w: 0, l: 0, p: 0 };
+    (weeks || gradedWeeks()).forEach(function (wk) {
+      gamesFor(wk).forEach(function (g) {
+        var side = g.home === team ? "home" : (g.away === team ? "away" : null);
+        if (!side) return;
+        if (filter && !filter(g, side)) return;
+        var res = resultOf(wk, g);
+        if (!res) return;
+        if (res === "push") t.p++;
+        else if (res === side) t.w++;
+        else t.l++;
+      });
+    });
+    return t;
+  }
+
+  var SPLITS = [
+    { id: "overall", label: "Overall", filter: null },
+    { id: "home", label: "Home", filter: function (g, side) { return side === "home"; } },
+    { id: "away", label: "Away", filter: function (g, side) { return side === "away"; } },
+    { id: "fav", label: "Favorite", filter: function (g, side) { return g.favored === side; } },
+    { id: "dog", label: "Underdog",
+      filter: function (g, side) { return g.favored && g.favored !== side; } },
+  ];
+
+  function teamSplits(team, weeks) {
+    var out = { team: team };
+    SPLITS.forEach(function (s) { out[s.id] = teamTally(team, s.filter, weeks); });
+    return out;
+  }
+
+  function atsPct(r) { var d = r.w + r.l; return d ? r.w / d : -1; }
+
+  // Most recent graded results first, newest -> oldest, capped at n.
+  function recentForm(team, n) {
+    var out = [];
+    gradedWeeks().slice().reverse().forEach(function (wk) {
+      if (out.length >= n) return;
+      gamesFor(wk).forEach(function (g) {
+        if (out.length >= n) return;
+        var side = g.home === team ? "home" : (g.away === team ? "away" : null);
+        if (!side) return;
+        var res = resultOf(wk, g);
+        if (!res) return;
+        out.push({
+          week: wk,
+          opp: side === "home" ? g.away : g.home,
+          at: side === "away",
+          result: res === "push" ? "push" : (res === side ? "win" : "loss"),
+        });
+      });
+    });
+    return out;
+  }
+
   function renderTeamTrends() {
     var el = document.getElementById("pane-teamtrends");
-    var weeks = Object.keys(state.weeks).map(Number).sort(function (a, b) { return a - b; });
+    var weeks = gradedWeeks();
     if (!weeks.length) { el.innerHTML = empty("Nothing to break down yet", "Upload a week and grade some games first."); return; }
 
     var teams = {};
@@ -1279,36 +1464,7 @@ window.FIREBASE_CONFIG = {
       gamesFor(wk).forEach(function (g) { teams[g.home] = true; teams[g.away] = true; });
     });
 
-    // filter(g, side) decides whether a given game/side counts toward this split;
-    // side is "home" or "away", whichever one `team` was in that game.
-    function teamTally(team, filter) {
-      var t = { w: 0, l: 0, p: 0 };
-      weeks.forEach(function (wk) {
-        gamesFor(wk).forEach(function (g) {
-          var side = g.home === team ? "home" : (g.away === team ? "away" : null);
-          if (!side) return;
-          if (filter && !filter(g, side)) return;
-          var res = resultOf(wk, g);
-          if (!res) return;
-          if (res === "push") t.p++;
-          else if (res === side) t.w++;
-          else t.l++;
-        });
-      });
-      return t;
-    }
-    function atsPct(r) { var d = r.w + r.l; return d ? r.w / d : -1; }
-
-    var rows = Object.keys(teams).map(function (team) {
-      return {
-        team: team,
-        overall: teamTally(team, null),
-        home: teamTally(team, function (g, side) { return side === "home"; }),
-        away: teamTally(team, function (g, side) { return side === "away"; }),
-        fav: teamTally(team, function (g, side) { return g.favored === side; }),
-        dog: teamTally(team, function (g, side) { return g.favored && g.favored !== side; }),
-      };
-    });
+    var rows = Object.keys(teams).map(function (team) { return teamSplits(team, weeks); });
 
     var COLS = [
       { id: "team", label: "Team" },
